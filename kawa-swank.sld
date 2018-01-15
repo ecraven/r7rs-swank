@@ -1,0 +1,7 @@
+(define-library (kawa-swank)
+  (export start-swank)
+  (import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl)
+          (rnrs hashtables) (srfi :1))
+  (include "specific/kawa.scm")
+  (include "common/base.scm")
+  (include "common/handlers.scm"))

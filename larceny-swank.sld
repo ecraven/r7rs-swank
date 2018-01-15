@@ -1,0 +1,8 @@
+(define-library (larceny-swank)
+  (export start-swank)
+  (import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl)
+          (srfi 69)
+          (only (larceny compiler) require)) 
+  (include "specific/larceny.scm")
+  (include "common/base.scm")
+  (include "common/handlers.scm"))

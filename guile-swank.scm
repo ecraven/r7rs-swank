@@ -1,0 +1,13 @@
+(define-module (guile-swank)
+  #:use-module (ice-9 match)
+  #:use-module (rnrs bytevectors)
+  #:use-module (rnrs io ports)
+  #:use-module (ice-9 binary-ports)
+  #:use-module (srfi srfi-69)
+  #:use-module (srfi srfi-11)
+  #:use-module (srfi srfi-1)
+  #:export (start-swank))
+
+(include "specific/guile.scm")
+(include "common/base.scm")
+(include "common/handlers.scm")

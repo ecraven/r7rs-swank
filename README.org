@@ -1,0 +1,8 @@
+* Swankish, a SLIME swank for Schemes
+** TODO [/]
+- [ ] proper information about the current Scheme
+- [ ] redirect output to Slime
+- [ ] inspector
+- [ ] debugger
+- [ ] tracing
+- [ ] image support

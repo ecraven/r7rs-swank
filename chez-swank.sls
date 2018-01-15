@@ -1,0 +1,7 @@
+(library (chez-swank)
+  (export start-swank)
+  (import (rename (chezscheme) (bytevector-copy! %bytevector-copy!) ;; (utf8->string %utf8->string) (string->utf8 %string->utf8)
+                  ) (socket net))
+  (include "specific/chez.ss")
+  (include "common/base.scm")
+  (include "common/handlers.scm"))

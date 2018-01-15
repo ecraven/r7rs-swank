@@ -1,0 +1,11 @@
+(define-library (gauche-swank)
+  (export start-swank)
+  (import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl)
+    (srfi-69)
+    (only (gauche base) keyword? keyword->string module-name all-modules)
+    (only (gauche net) make-server-socket socket-accept socket-input-port socket-output-port)
+    )
+
+  (include "specific/gauche.scm")
+  (include "common/base.scm")
+  (include "common/handlers.scm"))
