@@ -1,0 +1,2 @@
+(define ($scheme-name)
+  "gambit")

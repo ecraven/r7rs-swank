@@ -1,4 +1,6 @@
 (require 'socket)
+(define ($scheme-name)
+  "larceny")
 (define ($all-package-names)
   '())
 

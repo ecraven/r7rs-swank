@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "kawa")
 (define ($open-tcp-server/accept port-number handler)
   (let ((s (java.net.ServerSocket port-number)))
     (let ((connection-socket (s:accept)))

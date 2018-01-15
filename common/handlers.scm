@@ -8,15 +8,15 @@
    (lambda (exit)
      (parameterize ((param:abort (lambda (message)
                                    (exit `(:return (:abort ,message)
-                                                  ,id)))))
+                                                   ,id)))))
        `(:return (:ok ,(process-form sexp env-name))
-                 ,id)))))
+                            ,id)))))
 
 (define-slime-handler (swank:connection-info)
   `(:pid 123
          :style :spawn
          :encoding (:coding-systems ("utf-8-unix"))
-         :lisp-implementation (:type "Scheme" :name "scheme" :version 123 :program "/usr/bin/scheme")
+         :lisp-implementation (:type "Scheme" :name ,($scheme-name) :version 123 :program "/usr/bin/scheme")
          :machine (:instance "host" :type "X86-64")
          :features (:swank)
          :modules ("SWANK-ARGLISTS" "SWANK-REPL" "SWANK-PRESENTATIONS")

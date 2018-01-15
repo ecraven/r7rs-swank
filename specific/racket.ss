@@ -1,4 +1,6 @@
 (import (racket/tcp) (srfi/69))
+(define ($scheme-name)
+  "racket")
 (define ($open-tcp-server/accept port-number handler)
   (let ((server (tcp-listen port-number)))
     (let-values (((in out) (tcp-accept server)))

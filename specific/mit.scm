@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "mit-scheme")
 (define (fluid a)
   (a))
 

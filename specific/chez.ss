@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "chez-scheme")
 (define ($open-tcp-server/accept port-number handler)
      (with-tcp-server-socket
       port-number 1

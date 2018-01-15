@@ -34,10 +34,10 @@
 (define (write-message sexp)
   (write-packet (scheme->message sexp) (param:slime-out-port)))
 
+(define param:abort (make-parameter #f))
+
 (define (swank/abort message)
   ((param:abort) message))
-
-(define param:abort (make-parameter #f))
 
 (define (process-form form env-name)
   (let ((key (car form)))

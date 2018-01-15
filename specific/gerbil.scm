@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "gerbil-scheme")
 (define ($open-tcp-server/accept port-number handler)
   (let* ((p (open-tcp-server port-number))
          (c (read p)))

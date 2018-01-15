@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "gauche-scheme")
 (define ($open-tcp-server/accept port-number handler)
   (let* ((socket (make-server-socket 'inet port-number ':reuse-addr? #t))
          (cs (socket-accept socket)))

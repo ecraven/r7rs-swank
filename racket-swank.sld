@@ -1,5 +1,5 @@
 #lang r7rs
-(import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl)
+(import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl) (scheme load)
         (only (srfi 1) fold filter fold-right)
         (only (compatibility/mlist) mlist->list list->mlist)
         (only (srfi 13) string-prefix?)

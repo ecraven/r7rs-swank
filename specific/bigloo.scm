@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "bigloo")
 (define-syntax case-lambda
   (syntax-rules ()
     ((case-lambda (params body0 body1 ...) ...)

@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "chibi-scheme")
 (define ($open-tcp-server/accept port-number handler)
   ;; TODO: port number
   (run-net-server port-number (lambda (in out sock addr)

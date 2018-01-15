@@ -1,3 +1,5 @@
+(define ($scheme-name)
+  "chicken-scheme")
 (define ($open-tcp-server/accept port-number handler)
   (parameterize ((tcp-read-timeout #f))
     (let ((listener (tcp-listen port-number)))
