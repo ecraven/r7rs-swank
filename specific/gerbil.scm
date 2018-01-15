@@ -1,5 +1,7 @@
 (define ($scheme-name)
   "gerbil-scheme")
+(define ($set-package name)
+  (list name name))
 (define ($open-tcp-server/accept port-number handler)
   (let* ((p (open-tcp-server port-number))
          (c (read p)))
@@ -18,7 +20,7 @@
      (call-with-values (lambda () form) (lambda vals body0 body ...)))))
 
 (define ($all-package-names)
-  (map expander-context-id (filter module-context? (map cdr (hash->list (current-expander-module-registry))))))
+  (cons "(user)" (map expander-context-id (filter module-context? (map cdr (hash->list (current-expander-module-registry)))))))
 
 (define ($error-description error)
   (let ((o (open-output-string)))
@@ -33,19 +35,22 @@
       (let-values ((x (thunk)))
         (swank/write-string (get-output-string o) #f)
         (apply values x)))))
-
 (define (env-name->environment env-name)
-  (cond ((string=? env-name "(user)")
+  (cond ((or (and (string? env-name) (string=? env-name "(user)"))
+             (and (symbol? env-name) (eq? env-name 'nil)))
          (interaction-environment))
         (else
-         (find (lambda (e) (eq? (expander-context-id e) env-name))
-               (filter module-context? (map cdr (hash->list (current-expander-module-registry))))))))
+         (let ((name (string->symbol env-name)))
+           (find (lambda (e) (eq? (expander-context-id e) name))
+                 (filter module-context? (map cdr (hash->list (current-expander-module-registry)))))))))
+(define $environment env-name->environment)
 
 (define (environment-bindings env-name)
   (let ((env (env-name->environment env-name)))
     (if env
         (map car (hash->list (expander-context-table env)))
         '())))
+
 (define (string-match-forward a b)
   (let* ((a-len (string-length a))
          (b-len (string-length b))

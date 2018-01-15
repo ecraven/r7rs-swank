@@ -8,7 +8,8 @@
    (lambda (exit)
      (parameterize ((param:abort (lambda (message)
                                    (exit `(:return (:abort ,message)
-                                                   ,id)))))
+                                                   ,id))))
+                    (param:environment ($environment env-name)))
        `(:return (:ok ,(process-form sexp env-name))
                             ,id)))))
 
@@ -66,3 +67,6 @@
 (define-slime-handler (swank:load-file filename)
   (let ((results ($output-to-repl (lambda () (load filename (interaction-environment))))))
     'loaded))
+
+(define-slime-handler (swank:set-package name)
+  ($set-package name))

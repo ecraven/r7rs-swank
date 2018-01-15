@@ -24,6 +24,7 @@
 
 (define param:slime-in-port (make-parameter #f))
 (define param:slime-out-port (make-parameter #f))
+(define param:environment (make-parameter #f))
 
 (define (process-one-message in out)
   (let ((form (read-packet in)))
@@ -102,7 +103,7 @@
    (lambda (condition)
      (swank/abort ($error-description condition)))
    (lambda ()
-     (let-values ((vals (eval sexp (interaction-environment)))) ;; TODO environment
+     (let-values ((vals (eval sexp (param:environment)))) ;; TODO environment
        vals))))
 
 (define *presentations* ($make-hash-table))
