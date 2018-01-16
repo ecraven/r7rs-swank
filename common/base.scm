@@ -120,10 +120,12 @@
     (swank/write-string value type)
     (write-message `(:presentation-end ,id ,type))
     (swank/write-string "\n" type)))
+
 (define (write-to-string val)
   (let ((o (open-output-string)))
     (write val o)
     (get-output-string o)))
+
 (define (unquote-string x)
   (if (and (list? x)
            (eq? (car x) 'quote))
@@ -136,3 +138,54 @@
       x))
 (define (swank/write-string val type)
   (write-message `(:write-string ,(if (string? val) val (write-to-string val)) ,@(if type (list type) '()))))
+
+;;;; autodoc
+(define (improper->proper-list lst)
+  (if (pair? lst)
+      (cons (car lst)
+            (improper->proper-list (cdr lst)))
+      (if (null? lst)
+          '()
+          (list '!rest lst))))
+
+(define (find-expression-containing-swank-cursor-marker expr)
+  (if (list? expr)
+      (if (member 'swank::%cursor-marker% expr)
+          expr
+          (find (lambda (ex)
+                  (find-expression-containing-swank-cursor-marker ex))
+                expr))
+      #f))
+
+(define (highlight-at-cursor signature expr)
+  (let* ((form (find-expression-containing-swank-cursor-marker (cdr expr)))
+         (index (list-index (lambda (el) (eq? el '|swank::%cursor-marker%|)) form)))
+    (if index
+        (wrap-item/index (improper->proper-list signature) (- index 1) '===> '<===)
+        '())))
+
+(define (find-string-before-swank-cursor-marker expr)
+  (let ((ex (find-expression-containing-swank-cursor-marker expr)))
+    (if ex
+        (if (string? (car ex))
+            (car ex)
+            #f))))
+
+(define (wrap-item/index lst index before-marker after-marker)
+  (let loop ((i 0)
+             (lst lst))
+    (cond ((null? (cdr lst))
+           (list before-marker (car lst) after-marker))
+          ((member (car lst) '(!rest !optional))
+           (cons (car lst) (loop i (cdr lst))))
+          ((= i index)
+           (append (list before-marker (car lst) after-marker) (cdr lst)))
+          (else
+           (cons (car lst)
+                 (loop (+ i 1) (cdr lst)))))))
+
+(define (with-output-to-string thunk)
+  (let ((o (open-output-string)))
+    (parameterize ((current-output-port o))
+      (thunk))
+    (get-output-string o)))

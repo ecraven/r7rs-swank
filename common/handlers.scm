@@ -70,3 +70,20 @@
 
 (define-slime-handler (swank:set-package name)
   ($set-package name))
+
+(define-slime-handler (swank:autodoc expr . params)
+  (let* ((op-string (find-string-before-swank-cursor-marker expr)))
+    (if op-string
+        (let* ((signature+doc ($function-parameters-and-documentation op-string))
+               (signature (car signature+doc))
+               (doc (cdr signature+doc)))
+          (let ((answer (if signature (let* ((signature (highlight-at-cursor signature expr)))
+                                  (with-output-to-string (lambda ()
+                                                           (write signature)
+                                                           (if doc
+                                                               (begin
+                                                                 (display " — ")
+                                                                 (display doc))))))
+                            ':not-available)))
+            (list answer 't)))
+        (list ':not-available 't))))

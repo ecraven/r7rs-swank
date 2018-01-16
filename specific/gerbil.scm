@@ -1,7 +1,43 @@
 (define ($scheme-name)
   "gerbil-scheme")
+
+(define (remove-trailing-numbers str)
+  (define last (- (string-length str) 1))
+  (if (char-numeric? (string-ref str last))
+      (remove-trailing-numbers (substring str 0 last))
+      (string->symbol str)))
+
+(define (xmap fun lst)
+  (if (null? lst)
+      '()
+      (if (not (pair? lst))
+          (fun lst)
+          (cons (fun (car lst)) (xmap fun (cdr lst))))))
+
+(define (unsyntax-bindings lst)
+  (xmap (lambda (sym)
+          (let ((s (symbol->string sym)))
+            (remove-trailing-numbers s)))
+        lst))
+
+(define ($function-parameters-and-documentation name)
+  (let* ((binding (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval (string->symbol name) (param:environment)))))))
+         (source (if binding (##decompile binding) #f)))
+    (if (and source
+             (pair? source)
+             (not (null? source)))
+        (let ((s (car source)))
+          (case s
+            ((lambda ##lambda)
+             (cons (cons (string->symbol name) (unsyntax-bindings (cadr source)))
+                   (if (string? (caddr source)) (caddr source) #f)))
+            (else
+             (cons #f #f))))
+        (cons #f #f))))
+
 (define ($set-package name)
   (list name name))
+
 (define ($open-tcp-server/accept port-number handler)
   (let* ((p (open-tcp-server port-number))
          (c (read p)))
@@ -31,7 +67,8 @@
   ;; basic implementation, print all output at the end, this should
   ;; be replaced with a custom output port
   (let ((o (open-output-string)))
-    (parameterize ((current-output-port o))
+    (parameterize ((current-output-port o)
+                   (current-error-port o))
       (let-values ((x (thunk)))
         (swank/write-string (get-output-string o) #f)
         (apply values x)))))
