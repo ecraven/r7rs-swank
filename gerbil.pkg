@@ -1,1 +1,1 @@
-(prelude: :scheme/r7rs)
+(package: ecraven prelude: :scheme/r7rs build: "gerbil-build.ss")

@@ -1,11 +1,16 @@
 (define ($scheme-name)
   "gerbil-scheme")
 
-(define (remove-trailing-numbers str)
+(define (remove-underscores-and-trailing-numbers str)
   (define last (- (string-length str) 1))
-  (if (char-numeric? (string-ref str last))
-      (remove-trailing-numbers (substring str 0 last))
-      (string->symbol str)))
+  (cond ((char-numeric? (string-ref str last))
+         (remove-underscores-and-trailing-numbers (substring str 0 last)))
+        ((char=? (string-ref str last) #\_)
+         (remove-underscores-and-trailing-numbers (substring str 0 last)))
+        ((char=? (string-ref str 0) #\_)
+         (remove-underscores-and-trailing-numbers (substring str 1 (+ last 1))))
+        (else
+         (string->symbol str))))
 
 (define (xmap fun lst)
   (if (null? lst)
@@ -17,7 +22,7 @@
 (define (unsyntax-bindings lst)
   (xmap (lambda (sym)
           (let ((s (symbol->string sym)))
-            (remove-trailing-numbers s)))
+            (remove-underscores-and-trailing-numbers s)))
         lst))
 
 (define ($function-parameters-and-documentation name)
@@ -75,7 +80,7 @@
 (define (env-name->environment env-name)
   (cond ((or (and (string? env-name) (string=? env-name "(user)"))
              (and (symbol? env-name) (eq? env-name 'nil)))
-         (interaction-environment))
+         (gx#current-expander-context))
         (else
          (let ((name (string->symbol env-name)))
            (find (lambda (e) (eq? (expander-context-id e) name))
