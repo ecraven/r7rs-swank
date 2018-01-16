@@ -1,4 +1,4 @@
-(define-library (gerbil-swank)
+(define-library (ecraven gerbil-swank)
   (export start-swank)
   (import (scheme base) (scheme file) (scheme write) (scheme read) (scheme eval) (scheme repl) (scheme process-context) (scheme load) (scheme cxr) (scheme char)
           (std srfi |13|) (std srfi |1|)

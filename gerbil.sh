@@ -1,2 +1,2 @@
 #!/bin/bash
-gxi --lang r7rs -e '(add-load-path "'$(pwd)'")' -e '(import (gerbil-swank))' -e '(start-swank "/tmp/foo.txt")'
+gxi $GERBIL_HOME/lib/gxi-interactive -e '(import :ecraven/gerbil-swank)' -e '(start-swank "/tmp/gerbil-swank.txt")'
