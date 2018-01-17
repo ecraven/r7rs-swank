@@ -44,7 +44,10 @@
   (let ((key (car form)))
     (let ((h (find-handler key)))
       (if h
-          (apply h (cdr form))
+          (with-exception-handler
+           (lambda (condition)
+             (swank/abort ($error-description condition)))
+           (lambda () (apply h (cdr form))))
           (swank/abort "No handler found.")))))
 
 (define start-swank
@@ -99,12 +102,8 @@
   ($hash-table/get *handlers* name #f))
 
 (define (interactive-eval sexp)
-  (with-exception-handler
-   (lambda (condition)
-     (swank/abort ($error-description condition)))
-   (lambda ()
-     (let-values ((vals (eval sexp (param:environment)))) ;; TODO environment
-       vals))))
+  (let-values ((vals (eval sexp (param:environment)))) ;; TODO environment
+    vals))
 
 (define *presentations* ($make-hash-table))
 

@@ -82,7 +82,7 @@
                                                            (write signature)
                                                            (if doc
                                                                (begin
-                                                                 (display " — ")
+                                                                 (display " -- ")
                                                                  (display doc))))))
                             ':not-available)))
             (list answer 't)))
