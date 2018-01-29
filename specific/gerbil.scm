@@ -103,12 +103,29 @@
           (if (string=? (substring a 0 i) (substring b 0 i))
               (loop (+ i 1))
               (- i 1))))))
+
 (define (longest-common-prefix strings)
   (if (null? strings)
       ""
       (fold (lambda (s1 s2) (substring s2 0 (string-match-forward s1 s2))) (car strings) (cdr strings))))
+
 (define ($completions prefix env-name)
   (let ((matches (filter (lambda (el) (string-prefix? prefix el))
                          (map symbol->string (environment-bindings env-name)))))
     (cons matches
           (longest-common-prefix matches))))
+
+(define ($condition-trace condition)
+  '())
+
+(define ($frame-locals-and-catch-tags nr)
+  '())
+
+(define ($condition-msg condition)
+  "UNKNOWN")
+
+(define ($condition-links condition)
+  '())
+
+(define ($handle-condition exception)
+  #f)

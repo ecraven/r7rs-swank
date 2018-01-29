@@ -155,7 +155,7 @@
 
 (define (find-expression-containing-swank-cursor-marker expr)
   (if (list? expr)
-      (if (member 'swank::%cursor-marker% expr)
+      (if (member '|swank::%cursor-marker%| expr)
           expr
           (find (lambda (ex)
                   (find-expression-containing-swank-cursor-marker ex))

@@ -109,4 +109,4 @@
   (let ((trace ($condition-trace (param:active-condition))))
     (let ((from (min from (length trace)))
           (to (min to (length trace))))
-      (list-head (list-tail trace from) (- to from)))))
+      (take (list-tail trace from) (- to from)))))

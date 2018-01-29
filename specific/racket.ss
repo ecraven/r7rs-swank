@@ -63,3 +63,27 @@
                                       (mlist->list (map symbol->string (list->mlist (environment-bindings (env-name->environment env-name)))))))))
     (cons (mlist->list matches)
           (longest-common-prefix matches))))
+
+(define ($function-parameters-and-documentation name)
+  (cons #f #f))
+
+(define ($set-package name)
+  (list "(user)" "(user)"))
+
+(define ($environment name)
+  (interaction-environment))
+
+(define ($condition-trace condition)
+  '())
+
+(define ($frame-locals-and-catch-tags nr)
+  '())
+
+(define ($condition-msg condition)
+  "UNKNOWN")
+
+(define ($condition-links condition)
+  '())
+
+(define ($handle-condition exception)
+  #f)

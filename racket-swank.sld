@@ -1,6 +1,6 @@
 #lang r7rs
 (import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl) (scheme load)
-        (only (srfi 1) fold filter fold-right)
+        (only (srfi 1) fold filter fold-right find list-index iota take)
         (only (compatibility/mlist) mlist->list list->mlist)
         (only (srfi 13) string-prefix?)
         (only (racket/base) namespace? make-base-namespace namespace-require current-namespace directory-exists? current-directory build-path namespace-mapped-symbols foldr mcons mcar mcdr)

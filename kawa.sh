@@ -1,2 +1,2 @@
 #!/bin/bash
-kawa -f /home/nex/scheme/swank/kawa-swank.sld -e '(import (kawa-swank)) (start-swank 4005)'
+kawa -f kawa-swank.sld -e '(import (kawa-swank)) (start-swank 4005)'

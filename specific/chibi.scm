@@ -1,5 +1,6 @@
 (define ($scheme-name)
   "chibi-scheme")
+
 (define ($open-tcp-server/accept port-number handler)
   ;; TODO: port number
   (run-net-server port-number (lambda (in out sock addr)
@@ -74,7 +75,7 @@
     res))
 (define ($completions prefix env-name)
   (if (not (find-module '(user)))
-    (add-module! '(user) (make-module '() (interaction-environment) '())))
+    (add-module! '(user) (make-module '() ($environment env-name) '())))
   (let* ((package (if (not (string? env-name)) *active-package-name* (let ((in (open-input-string env-name))) (read in)))))
     (display "package: ") (display package) (newline)
     (let* ((env (module-env (cdr (find-module package)))))
@@ -86,3 +87,26 @@
 	  (cons completions
 		(longest-common-prefix completions)))))))
 
+(define ($function-parameters-and-documentation name)
+  (cons #f #f))
+
+(define ($set-package name)
+  (list "(user)" "(user)"))
+
+(define ($environment name)
+  (interaction-environment))
+
+(define ($condition-trace condition)
+  '())
+
+(define ($frame-locals-and-catch-tags nr)
+  '())
+
+(define ($condition-msg condition)
+  "UNKNOWN")
+
+(define ($condition-links condition)
+  '())
+
+(define ($handle-condition exception)
+  #f)

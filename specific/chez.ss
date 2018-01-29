@@ -6,6 +6,7 @@
     (display-condition condition o)
     (newline o)
     (get-output-string o)))
+
 (define ($condition-trace condition)
   (define (display current)
     (let* ((code (current 'code))
@@ -30,6 +31,7 @@
 (define ($handle-condition exception)
   (when (continuation-condition? exception)
     (invoke-sldb exception)))
+
 (define ($condition-links condition)
   (let ((k (inspect/object (condition-continuation condition))))
     (let loop ((result '())
@@ -220,3 +222,5 @@
 (define ($frame-locals-and-catch-tags nr)
   `(,(continuation-variables (list-ref (param:active-continuations) nr))
     nil))
+
+(define take list-head)
