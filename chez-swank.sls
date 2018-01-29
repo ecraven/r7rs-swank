@@ -1,5 +1,6 @@
 (library (chez-swank)
-  (export start-swank)
+  (export start-swank
+          swank:get-last-exception)
   (import (rename (chezscheme)
                   (bytevector-copy! %bytevector-copy!)
                   (load %load)

@@ -6,7 +6,7 @@
                (to-read length))
       (if (zero? to-read)
           (let ((res (utf8->string result)))
-            (display "from slime> ") (write res) (newline)
+            (display "from slime> " log-port) (write res log-port) (newline log-port) (flush-output-port log-port)
             (message->scheme res))
           (let* ((tmp (read-bytevector to-read port))
                  (len (bytevector-length tmp)))
@@ -25,12 +25,15 @@
 (define param:slime-in-port (make-parameter #f))
 (define param:slime-out-port (make-parameter #f))
 (define param:environment (make-parameter #f))
+(define param:current-id (make-parameter #f))
+(define param:condition:msg (make-parameter "nil"))
+(define param:active-continuations (make-parameter #f))
+(define param:active-condition (make-parameter #f))
+(define log-port (current-output-port))
 
-(define (process-one-message in out)
-  (let ((form (read-packet in)))
-    (parameterize ((param:slime-in-port in)
-                   (param:slime-out-port out))
-      (write-message (process-form form #f)))))
+(define (process-one-message)
+  (let ((form (read-packet (param:slime-in-port))))
+    (write-message (process-form form #f))))
 
 (define (write-message sexp)
   (write-packet (scheme->message sexp) (param:slime-out-port)))
@@ -46,6 +49,7 @@
       (if h
           (with-exception-handler
            (lambda (condition)
+             ($handle-condition condition)
              (swank/abort ($error-description condition)))
            (lambda () (apply h (cdr form))))
           (swank/abort "No handler found.")))))
@@ -60,7 +64,7 @@
                                       (error "Please call with port number or filename to which the automatically chosen port number will be written."))))))
 
 (define (server-loop port-number port-file)
-  (display "swank listening on ") (display port-number) (newline) (flush-output-port)
+  (display "swank listening on " log-port) (display port-number log-port) (newline log-port) (flush-output-port log-port)
   ($open-tcp-server/accept port-number
                            (lambda (actual-port-number in out)
                              (when port-file
@@ -69,9 +73,11 @@
                                (with-output-to-file port-file
                                  (lambda ()
                                    (display actual-port-number))))
-                             (let loop ()
-                               (process-one-message in out)
-                               (loop)))))
+                             (parameterize ((param:slime-in-port in)
+                                            (param:slime-out-port out))
+                               (let loop ()
+                                 (process-one-message)
+                                 (loop))))))
 
 (define (string-pad-left string size pad)
   (let* ((s-len (string-length string))
@@ -86,7 +92,7 @@
          (hex-len (number->string len 16)))
     (when (> (string-length hex-len) 6)
       (error "Expression length exceeds 24 bits" hex-len))
-    (display "to slime< ") (write str) (newline)
+    (display "to slime< " log-port) (write str log-port) (newline log-port)
     (write-string (string-pad-left hex-len 6 #\0) port)
     (write-string str port)
     (flush-output-port port)))
@@ -116,7 +122,7 @@
   (let ((id (next-presentation-id)))
     ($hash-table/put! *presentations* id value)
     (write-message `(:presentation-start ,id ,type))
-    (swank/write-string value type)
+    (swank/write-string (write-to-string value) type)
     (write-message `(:presentation-end ,id ,type))
     (swank/write-string "\n" type)))
 
@@ -188,3 +194,37 @@
     (parameterize ((current-output-port o))
       (thunk))
     (get-output-string o)))
+
+(define *throw-to-top-level* #f)
+(define (sldb-loop)
+  (if *throw-to-top-level*
+      (begin
+        (set! *throw-to-top-level* #f)
+        (write-message `(:debug-return 1 1 nil)))
+      (begin
+        (process-one-message)
+        (sldb-loop))))
+(define *last-exception* #f)
+(define (swank:get-last-exception)
+  *last-exception*)
+(define (invoke-sldb exception)
+  (set! *last-exception* exception)
+  (let ((msg ($condition-msg exception))
+        (trace ($condition-trace exception))
+        (links ($condition-links exception)))
+    (write-message `(:debug 1 1 (,msg "FOO" nil)
+                            (("ABORT" "abort"))
+                            (,@(map (lambda (c t i)
+                                      `(,i ,t))
+                                    links
+                                    trace
+                                    (iota (length trace))))
+                            ,(let ((id (param:current-id)))
+                               (if id
+                                   (list id)
+                                   'nil))))
+    (write-message `(:debug-activate 1 1))
+    (parameterize ((param:condition:msg msg)
+                   (param:active-continuations links)
+                   (param:active-condition exception))
+      (sldb-loop))))

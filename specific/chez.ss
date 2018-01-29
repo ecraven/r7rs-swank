@@ -1,11 +1,47 @@
 (define ($scheme-name)
   "chez-scheme")
 
+(define ($condition-msg condition)
+  (let ((o (open-output-string)))
+    (display-condition condition o)
+    (newline o)
+    (get-output-string o)))
+(define ($condition-trace condition)
+  (define (display current)
+    (let* ((code (current 'code))
+           (source (if code (code 'source) #f))
+           (name (or (and (code 'name)
+                          (string->symbol (code 'name)))
+                     (current 'value)))
+           (location (let-values ((sp (current 'source-path)))
+                       sp))
+           (v (if source (source 'value) #f)))
+      (let ((s (write-to-string (if v v (current 'value)))))
+        (if v
+            (string-append (write-to-string name) " (" (write-to-string location) ")" " - " s)
+            s))))
+  (map display ($condition-links condition)))
 (define (load path env)
   (%load path))
 
 (define (error . rest)
   (apply %error 'error rest))
+
+(define ($handle-condition exception)
+  (when (continuation-condition? exception)
+    (invoke-sldb exception)))
+(define ($condition-links condition)
+  (let ((k (inspect/object (condition-continuation condition))))
+    (let loop ((result '())
+               (current k)
+               (i 0))
+      (if (> i 10)
+          (reverse result)
+          (if (eq? 'continuation (current 'type))
+              (loop (cons current result)
+                    (current 'link)
+                    (+ i 1))
+              (reverse result))))))
 
 (define (binding-documentation p)
   ;; same as (inspect object), then hitting c
@@ -49,10 +85,10 @@
          (doc (if binding (binding-documentation binding) #f)))
     (cons signature doc)))
 
-(define (%write-to-string val)
-  (let ((o (open-output-string)))
-    (write val o)
-    (get-output-string o)))
+;; (define (%write-to-string val)
+;;   (let ((o (open-output-string)))
+;;     (write val o)
+;;     (get-output-string o)))
 
 (define ($environment env-name)
   ;; don't support any changes
@@ -87,22 +123,40 @@
     (get-output-string o)))
 
 (define ($all-package-names)
-  (map (lambda (package) (%write-to-string package))
+  (map (lambda (package) (write-to-string package))
        (cons '(user) (library-list))))
 
 (define (bytevector-copy! to to-index from)
   (%bytevector-copy! from 0 to to-index (bytevector-length from)))
 
+(define repl-port (make-custom-textual-input/output-port "swank repl port"
+            ;; read
+            (lambda (string start count)
+              0
+              )
+            ;; write
+            (lambda (string start count)
+              (swank/write-string (substring string start (+ start count)) #f)
+              count)
+            ;; getpos
+            #f
+            ;; setpos
+            #f
+            ;; close
+            (lambda ()
+              (display "Cannot close repl port\n" log-port))))
+
 (define ($output-to-repl thunk)
   ;; basic implementation, print all output at the end, this should
   ;; be replaced with a custom output port
-  (let ((o (open-output-string)))
-    (parameterize ((current-output-port o)
-                   (trace-output-port o)
-                   (current-error-port o))
-      (let-values ((x (thunk)))
-        (swank/write-string (get-output-string o) #f)
-        (apply values x)))))
+  (parameterize ((current-output-port repl-port)
+                 (current-error-port repl-port)
+                 (trace-output-port repl-port)
+                 (console-output-port repl-port)
+                 (console-error-port repl-port))
+    (let-values ((v (thunk)))
+      (flush-output-port repl-port)
+      (apply values v))))
 
 (define (pstring->environment pstring)
   (if (or (eq? 'nil pstring)
@@ -142,7 +196,7 @@
   (let ((matches (sort string-ci<?
                        (filter (lambda (el)
                                  (string-prefix? prefix el))
-                               (map %write-to-string (environment-symbols (pstring->environment env-name))))))) ;;  (interaction-environment)
+                               (map write-to-string (environment-symbols (pstring->environment env-name))))))) ;;  (interaction-environment)
     (cons matches
           (longest-common-prefix matches))))
 
@@ -154,3 +208,15 @@
         (if (predicate (car l))
             i
             (loop (+ i 1) (cdr l))))))
+
+(define (continuation-variables ins)
+  (let* ((len (ins 'length)))
+    (map (lambda (i)
+           `(:name ,(write-to-string (or ((ins 'ref i) 'name) '|UNKNOWN|))
+                   :id 0
+                   :value ,(write-to-string (((ins 'ref i) 'ref) 'value))))
+         (iota len))))
+
+(define ($frame-locals-and-catch-tags nr)
+  `(,(continuation-variables (list-ref (param:active-continuations) nr))
+    nil))

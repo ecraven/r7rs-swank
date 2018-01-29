@@ -9,7 +9,8 @@
      (parameterize ((param:abort (lambda (message)
                                    (exit `(:return (:abort ,message)
                                                    ,id))))
-                    (param:environment ($environment env-name)))
+                    (param:environment ($environment env-name))
+                    (param:current-id id))
        `(:return (:ok ,(process-form sexp env-name))
                             ,id)))))
 
@@ -87,3 +88,25 @@
                             ':not-available)))
             (list answer 't)))
         (list ':not-available 't))))
+(define-slime-handler (swank:frame-locals-and-catch-tags nr)
+  ;; (:return
+  ;;  (:ok
+  ;;   (((:name "X" :id 0 :value "1")
+  ;;     (:name "Y" :id 0 :value "0"))
+  ;;    nil))
+  ;;  8)
+  ($frame-locals-and-catch-tags nr))
+(define-slime-handler (swank:throw-to-toplevel)
+  (set! *throw-to-top-level* #t)
+  (swank/abort (param:condition:msg)))
+(define-slime-handler (swank:backtrace from to)
+  ;; (:return
+  ;;  (:ok
+  ;;   (((:name "X" :id 0 :value "1")
+  ;;     (:name "Y" :id 0 :value "0"))
+  ;;    nil))
+  ;;  8)
+  (let ((trace ($condition-trace (param:active-condition))))
+    (let ((from (min from (length trace)))
+          (to (min to (length trace))))
+      (list-head (list-tail trace from) (- to from)))))
