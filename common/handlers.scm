@@ -55,6 +55,12 @@
     (list (car completions+prefix)
           (cdr completions+prefix))))
 
+(define-slime-handler (swank:simple-completions prefix env-name)
+  ;; TODO: for now, just copy swank:completions
+  (let ((completions+prefix ($completions prefix (unquote-string env-name))))
+    (list (car completions+prefix)
+          (cdr completions+prefix))))
+
 (define-slime-handler (swank:compile-string-for-emacs form buffer position filename policy)
   ;; TODO: for now, just evaluate, copy of listener-eval
   (let ((results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form)))))))
