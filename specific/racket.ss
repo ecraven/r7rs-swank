@@ -11,6 +11,9 @@
 (define $hash-table/put! hash-table-set!)
 
 (define $hash-table/get hash-table-ref/default)
+
+(define $hash-table/count hash-table-size)
+
 (define env (let ((n (make-base-namespace)))
               (parameterize ((current-namespace n))
                 (namespace-require 'r7rs)
@@ -79,6 +82,9 @@
 (define ($frame-locals-and-catch-tags nr)
   '())
 
+(define ($frame-var-value frame index)
+  #f)
+
 (define ($condition-msg condition)
   "UNKNOWN")
 
@@ -87,3 +93,17 @@
 
 (define ($handle-condition exception)
   #f)
+
+(define-record-type <istate>
+  (make-istate object parts next previous content)
+  istate?
+  (object istate-object)
+  (parts istate-parts)
+  (next istate-next set-istate-next!)
+  (previous istate-previous)
+  (content istate-content))
+
+(define ($inspect-fallback object)
+  #f)
+
+(define $pretty-print pretty-print)
