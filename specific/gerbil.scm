@@ -123,6 +123,9 @@
 (define ($frame-locals-and-catch-tags nr)
   '())
 
+(define ($frame-var-value frame index)
+  #f)
+
 (define ($condition-msg condition)
   "UNKNOWN")
 

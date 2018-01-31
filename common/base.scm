@@ -171,6 +171,15 @@ The secondary value indicates the absence of an entry."
     (display val o)
     (get-output-string o)))
 
+(define (unquote-number n)
+  "If N is '17, return 17. Otherwise return N."
+  (if (and (pair? n)
+           (eq? (car n) 'quote)
+           (pair? (cdr n))
+           (number? (cadr n)))
+      (cadr n)
+      n))
+
 (define (unquote-string x)
   (if (and (list? x)
            (eq? (car x) 'quote))

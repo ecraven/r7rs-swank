@@ -204,3 +204,11 @@
 
 ;; (define-slime-handler (swank:listener-get-value)
 ;;   'todo)
+(define-slime-handler (swank:inspect-presentation id reset?)
+  (when reset?
+    (reset-inspector))
+  (inspect-object ($hash-table/get *presentations* (unquote-number id) #f)))
+
+(define-slime-handler (swank:inspect-frame-var frame index)
+  (reset-inspector)
+  (inspect-object ($frame-var-value frame index)))

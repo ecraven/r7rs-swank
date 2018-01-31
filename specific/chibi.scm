@@ -111,6 +111,9 @@
 (define ($frame-locals-and-catch-tags nr)
   '())
 
+(define ($frame-var-value frame index)
+  #f)
+
 (define ($condition-msg condition)
   "UNKNOWN")
 
@@ -132,3 +135,5 @@
   (previous istate-previous)
   (content istate-content))
 
+(define ($inspect-fallback object)
+  #f)

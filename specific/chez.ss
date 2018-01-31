@@ -225,6 +225,9 @@
   `(,(continuation-variables (list-ref (param:active-continuations) nr))
     nil))
 
+(define ($frame-var-value frame index)
+  ((((list-ref (param:active-continuations) frame) 'ref index) 'ref) 'value))
+
 (define take list-head)
 (define drop list-tail)
 (define-structure (istate object parts next previous content))
