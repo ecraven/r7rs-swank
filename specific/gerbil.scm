@@ -129,3 +129,16 @@
 
 (define ($handle-condition exception)
   #f)
+
+(define %repl-result-history-ref ##repl-result-history-ref)
+(define (repl-result-history-ref id)
+  ;; If we are swanky
+  (if (param:environment)
+    (call-with-values
+	(lambda () (swank:lookup-presented-object
+		    (- last-presentation-id id)))
+	(lambda (value exists?)
+	  (unless (eq? 'nil exists?)
+	    value)))
+    ;;otherwise, back to normal
+    (%repl-result-history-ref id)))

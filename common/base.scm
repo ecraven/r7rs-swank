@@ -147,10 +147,11 @@ The secondary value indicates the absence of an entry."
        (string-replace string "" start (+ 2 start)))
       string)))
 
-(define next-presentation-id (let ((count 0))
-                               (lambda ()
-                                 (set! count (+ count 1))
-                                 count)))
+(define last-presentation-id 0)
+(define (next-presentation-id)
+  (set! last-presentation-id (+ last-presentation-id 1))
+  last-presentation-id)
+
 (define (presentations?) #t)
 (define (present value type)
   (let ((id (next-presentation-id)))
