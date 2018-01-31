@@ -212,3 +212,19 @@
 (define-slime-handler (swank:inspect-frame-var frame index)
   (reset-inspector)
   (inspect-object ($frame-var-value frame index)))
+
+(define-slime-handler (swank:interactive-eval form)
+  (let* ((results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form))))))
+         (count (length results)))
+    (cond ((= count 1)
+           (string-append "=> " (display-to-string (car results))))
+          ((= count 0)
+           "; No value")
+          (else
+           (let ((vs (map display-to-string results)))
+             (let loop ((vals (cdr vs))
+                        (result (string-append "=> " (car vs))))
+               (if (null? vals)
+                   result
+                   (loop (cdr vals)
+                         (string-append result ", " (car vals))))))))))
