@@ -113,6 +113,40 @@
 
 (define *presentations* ($make-hash-table))
 
+(define (swank:lookup-presented-object id)
+   "Retrieve the object corresponding to ID.
+The secondary value indicates the absence of an entry."
+   ;; it seems we often get (list 'quote id)
+   (if (list? id)
+     (swank:lookup-presented-object (cadr id))
+     (let* ((nope (list #f))
+	    (val (hash-ref
+		  *presentations*
+		  ;; emacs seems to ask for a number with a decimal,
+		  ;; aka inexact
+		  (exact id) nope)))
+       (values (if (eq? nope val) #f val)
+	       (if (eq? nope val) 'nil 't)))))
+
+(define (swank:lookup-presented-object-or-lose id)
+  "Get the result of the previous REPL evaluation with ID."
+  (call-with-values (lambda () (swank:lookup-presented-object id))
+    (lambda (object found?)
+      (if (eq? found? 'nil)
+	(swank/abort
+	 (string-append "Attempt to access unrecorded object (id "
+			(number->string id)")"))
+	object))))
+
+(define (replace-readtime-lookup-presented-object-or-lose string)
+  "For presentations, emacs passes something that common lisp evals at read time. The resulting object is very different than what gerbil or gambits #. tries to do, so we do everything at run time"
+  (let* ((pattern "#.(swank:lookup-presented-object-or-lose ")
+	 (start (string-contains string pattern)))
+    (if start
+      (replace-readtime-lookup-presented-object-or-lose
+       (string-replace string "" start (+ 2 start)))
+      string)))
+
 (define next-presentation-id (let ((count 0))
                                (lambda ()
                                  (set! count (+ count 1))

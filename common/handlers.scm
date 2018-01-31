@@ -32,15 +32,24 @@
 (define-slime-handler (swank:init-presentations)
   '())
 
+(define-slime-handler (cl:nth-value num form)
+  (call-with-values
+      (lambda () (process-form form (param:environment)))
+    (lambda values (list-ref values num))))
+
+(define-slime-handler (swank:lookup-presented-object num)
+  (swank:lookup-presented-object num))
+
 (define-slime-handler (swank-repl:create-repl . args)
   (list "(user)" "(user)"))
 
 (define-slime-handler (swank-repl:listener-eval form)
-  (let ((results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form)))))))
+  (let* ((form (replace-readtime-lookup-presented-object-or-lose form))
+	 (results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form)))))))
     (for-each (lambda (val)
                 (if (presentations?)
-                    (present val ':repl-result)
-                    (swank/write-string val 'repl-result)))
+		  (present val ':repl-result)
+		  (swank/write-string val 'repl-result)))
               results)
     '()))
 
