@@ -231,6 +231,9 @@
 
 (define $pretty-print pretty-print)
 
+(define ($inspect-fallback object)
+  #f)
+
 ;;;; srfi-13 parts
 (define (string-replace s1 s2 start1 end1) ;; . start2+end2
   (let* ((s1-len (string-length s1))

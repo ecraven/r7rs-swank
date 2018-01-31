@@ -326,13 +326,14 @@ The secondary value indicates the absence of an entry."
                      ps)))
 
 (define (swank/inspect object)
-  (cond ((boolean? object) (inspect-boolean object))
-        ((symbol? object)  (inspect-symbol object))
-        ((char? object)    (inspect-char object))
-        ((integer? object) (inspect-integer object))
-        ((pair? object)    (inspect-pair object))
-        ((vector? object)  (inspect-vector object))
-        ((string? object)  (inspect-string object))
+  (cond ((boolean? object)    (inspect-boolean object))
+        ((symbol? object)     (inspect-symbol object))
+        ((char? object)       (inspect-char object))
+        ((integer? object)    (inspect-integer object))
+        ((pair? object)       (inspect-pair object))
+        ((vector? object)     (inspect-vector object))
+        ((bytevector? object) (inspect-bytevector object))
+        ((string? object)     (inspect-string object))
         (else
          (inspect-unknown object))))
 
@@ -376,7 +377,10 @@ The secondary value indicates the absence of an entry."
   (stream (inspector-line "Symbol" object)))
 
 (define (inspect-unknown object)
-  (stream (inspector-line "Object" object)))
+  (let ((specific ($inspect-fallback object)))
+    (if specific
+        specific
+        (stream (inspector-line "Object" object)))))
 
 (define (inspect-vector object)
   (stream-cons (inspector-line "Length" (vector-length object))
@@ -384,6 +388,15 @@ The secondary value indicates the absence of an entry."
                  (let loop ((i 0))
                    (if (< i len)
                        (stream-cons (inspector-line i (vector-ref object i))
+                                    (loop (+ i 1)))
+                       (stream))))))
+
+(define (inspect-bytevector object)
+  (stream-cons (inspector-line "Length" (bytevector-length object))
+               (let ((len (bytevector-length object)))
+                 (let loop ((i 0))
+                   (if (< i len)
+                       (stream-cons (inspector-line i (bytevector-u8-ref object i))
                                     (loop (+ i 1)))
                        (stream))))))
 

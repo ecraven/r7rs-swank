@@ -135,6 +135,9 @@
 (define ($pretty-print object)
   (pp object (current-output-port)))
 
+(define ($inspect-fallback object)
+  #f)
+
 (define-record-type <istate>
   (make-istate object parts next previous content)
   istate?

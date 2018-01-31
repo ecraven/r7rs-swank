@@ -71,7 +71,7 @@
                                                                (lambda ()
                                                                  (eval (string->symbol first) (env-name->environment env-name))))))))
           (if binding
-              (let ((c (if (instance? binding java.lang.Class) binding (binding:getClass))))
+              (let ((c :: java.lang.Class (if (instance? binding java.lang.Class) binding (binding:getClass))))
                 (let ((methods (*:getMethods c))
                       (fields (*:getFields c)))
                   (append (filter-relevant (map *:getName methods))
