@@ -224,3 +224,31 @@
     nil))
 
 (define take list-head)
+
+;;;; srfi-13 parts
+(define (string-replace s1 s2 start1 end1) ;; . start2+end2
+  (let* ((s1-len (string-length s1))
+         (s2-len (string-length s2))
+         (total-len (+ (- s1-len (- end1 start1)) s2-len))
+         (result (make-string total-len)))
+    (string-copy! s1 0 result 0 start1)
+    (string-copy! s2 0 result start1 s2-len)
+    (string-copy! s1 end1 result (+ start1 s2-len) (- s1-len end1))
+    result))
+
+(define string-contains
+  (case-lambda
+   ((text pattern)
+    (string-contains text pattern 0 (string-length text)))
+   ((text pattern start)
+    (string-contains text pattern start (string-length text)))
+   ((text pattern start end)
+    (let* ((d-len (string-length pattern))
+           (s-len (string-length text))
+           (end (- end d-len)))
+      (let loop ((i start))
+        (if (> i end)
+            #f
+            (if (string-prefix? pattern (substring text i s-len))
+                i
+                (loop (+ i 1)))))))))

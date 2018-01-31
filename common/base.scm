@@ -120,7 +120,7 @@ The secondary value indicates the absence of an entry."
    (if (list? id)
      (swank:lookup-presented-object (cadr id))
      (let* ((nope (list #f))
-	    (val (hash-ref
+	    (val ($hash-table/get
 		  *presentations*
 		  ;; emacs seems to ask for a number with a decimal,
 		  ;; aka inexact

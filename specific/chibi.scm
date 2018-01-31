@@ -1,3 +1,10 @@
+;;;; srfi 13
+(define %string-contains string-contains)
+(define (string-contains string pattern)
+  (let ((x (%string-contains string pattern)))
+    (if x
+        (string-cursor->index string x)
+        x)))
 (define ($scheme-name)
   "chibi-scheme")
 
