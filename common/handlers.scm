@@ -74,9 +74,7 @@
   ;; TODO: for now, just evaluate, copy of listener-eval
   (let ((results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form)))))))
     (for-each (lambda (val)
-                (if (presentations?)
-                    (present val ':repl-result)
-                    (swank/write-string val 'repl-result)))
+		(swank/write-string val 'repl-result))
               results)
     `(:compilation-result nil t 0.001 nil nil)))
 
