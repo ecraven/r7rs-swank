@@ -54,6 +54,8 @@
 
 (define $hash-table/get hash-ref)
 
+(define $hash-table/count hash-length)
+
 ;; TODO remove when let-values works correctly
 (define-syntax let-values
   (syntax-rules ()
@@ -129,6 +131,18 @@
 
 (define ($handle-condition exception)
   #f)
+
+(define ($pretty-print object)
+  (pp object (current-output-port)))
+
+(define-record-type <istate>
+  (make-istate object parts next previous content)
+  istate?
+  (object istate-object)
+  (parts istate-parts)
+  (next istate-next set-istate-next!)
+  (previous istate-previous)
+  (content istate-content))
 
 (define %repl-result-history-ref ##repl-result-history-ref)
 (define (repl-result-history-ref id)

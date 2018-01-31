@@ -113,6 +113,8 @@
 
 (define $hash-table/get hashtable-ref)
 
+(define $hash-table/count hashtable-size)
+
 (define (read-bytevector size port)
   (get-bytevector-n port size))
 
@@ -224,6 +226,10 @@
     nil))
 
 (define take list-head)
+(define drop list-tail)
+(define-structure (istate object parts next previous content))
+
+(define $pretty-print pretty-print)
 
 ;;;; srfi-13 parts
 (define (string-replace s1 s2 start1 end1) ;; . start2+end2
@@ -252,3 +258,4 @@
             (if (string-prefix? pattern (substring text i s-len))
                 i
                 (loop (+ i 1)))))))))
+

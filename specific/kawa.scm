@@ -12,8 +12,14 @@
 
 (define $hash-table/get hashtable-ref)
 
+(define $hash-table/count hashtable-size)
+
 (define ($error-description error)
   (error:toString))
+
+(define ($all-package-names)
+  ;; TODO
+  '("(user)"))
 
 (define (environment-bindings env :: gnu.mapping.SimpleEnvironment)
   (let loop ((enum :: gnu.mapping.LocationEnumeration (env:enumerateAllLocations))
@@ -103,3 +109,14 @@
 
 (define ($handle-condition exception)
   #f)
+
+(define $pretty-print pprint)
+
+(define-record-type <istate>
+  (make-istate object parts next previous content)
+  istate?
+  (object istate-object)
+  (parts istate-parts)
+  (next istate-next set-istate-next!)
+  (previous istate-previous)
+  (content istate-content))

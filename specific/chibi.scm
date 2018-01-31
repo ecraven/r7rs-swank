@@ -19,6 +19,8 @@
 
 (define $hash-table/get hash-table-ref/default)
 
+(define $hash-table/count hash-table-size)
+
 (define ($all-package-names)
   (map display-to-string (map car *modules*)))
 
@@ -117,3 +119,16 @@
 
 (define ($handle-condition exception)
   #f)
+
+(define ($pretty-print object)
+  (show (current-output-port) (pretty object)))
+
+(define-record-type <istate>
+  (make-istate object parts next previous content)
+  istate?
+  (object istate-object)
+  (parts istate-parts)
+  (next istate-next set-istate-next!)
+  (previous istate-previous)
+  (content istate-content))
+

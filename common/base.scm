@@ -100,7 +100,7 @@
 (define *handlers* ($make-hash-table))
 
 (define (register-slime-handler! name function)
-   ;; kawa returns non-equal for symbols with :, so we force the registered ones through READ as well
+  ;; kawa returns non-equal for symbols with :, so we force the registered ones through READ as well
   (let ((name (read (open-input-string (symbol->string name)))))
     ($hash-table/put! *handlers* name function)))
 
@@ -114,38 +114,38 @@
 (define *presentations* ($make-hash-table))
 
 (define (swank:lookup-presented-object id)
-   "Retrieve the object corresponding to ID.
+  "Retrieve the object corresponding to ID.
 The secondary value indicates the absence of an entry."
-   ;; it seems we often get (list 'quote id)
-   (if (list? id)
-     (swank:lookup-presented-object (cadr id))
-     (let* ((nope (list #f))
-	    (val ($hash-table/get
-		  *presentations*
-		  ;; emacs seems to ask for a number with a decimal,
-		  ;; aka inexact
-		  (exact id) nope)))
-       (values (if (eq? nope val) #f val)
-	       (if (eq? nope val) 'nil 't)))))
+  ;; it seems we often get (list 'quote id)
+  (if (list? id)
+      (swank:lookup-presented-object (cadr id))
+      (let* ((nope (list #f))
+             (val ($hash-table/get
+                   *presentations*
+                   ;; emacs seems to ask for a number with a decimal,
+                   ;; aka inexact
+                   (exact id) nope)))
+        (values (if (eq? nope val) #f val)
+                (if (eq? nope val) 'nil 't)))))
 
 (define (swank:lookup-presented-object-or-lose id)
   "Get the result of the previous REPL evaluation with ID."
   (call-with-values (lambda () (swank:lookup-presented-object id))
     (lambda (object found?)
       (if (eq? found? 'nil)
-	(swank/abort
-	 (string-append "Attempt to access unrecorded object (id "
-			(number->string id)")"))
-	object))))
+          (swank/abort
+           (string-append "Attempt to access unrecorded object (id "
+                          (number->string id)")"))
+          object))))
 
 (define (replace-readtime-lookup-presented-object-or-lose string)
   "For presentations, emacs passes something that common lisp evals at read time. The resulting object is very different than what gerbil or gambits #. tries to do, so we do everything at run time"
   (let* ((pattern "#.(swank:lookup-presented-object-or-lose ")
 	 (start (string-contains string pattern)))
     (if start
-      (replace-readtime-lookup-presented-object-or-lose
-       (string-replace string "" start (+ 2 start)))
-      string)))
+        (replace-readtime-lookup-presented-object-or-lose
+         (string-replace string "" start (+ 2 start)))
+        string)))
 
 (define last-presentation-id 0)
 (define (next-presentation-id)
@@ -164,6 +164,11 @@ The secondary value indicates the absence of an entry."
 (define (write-to-string val)
   (let ((o (open-output-string)))
     (write val o)
+    (get-output-string o)))
+
+(define (display-to-string val)
+  (let ((o (open-output-string)))
+    (display val o)
     (get-output-string o)))
 
 (define (unquote-string x)
@@ -263,3 +268,163 @@ The secondary value indicates the absence of an entry."
                    (param:active-continuations links)
                    (param:active-condition exception))
       (sldb-loop))))
+
+(define inspector-state #f)
+
+;; see specific for the record type definition of istate
+
+(define (reset-inspector)
+  (set! inspector-state #f))
+
+(define (inspect-object object)
+  (let ((previous inspector-state)
+        (content (swank/inspect object))
+        (parts ($make-hash-table)))
+    (set! inspector-state (make-istate object parts #f previous content))
+    (if previous (set-istate-next! previous inspector-state))
+    (istate->elisp inspector-state)))
+
+(define (ellipsize str)
+  (if (> (string-length str) 100)
+      (string-append (substring str 0 97) "...")
+      str))
+
+(define (istate->elisp inspector-state)
+  `(:title ,(ellipsize (write-to-string (istate-object inspector-state)))
+           :id ,(assign-istate-index (istate-object inspector-state) (istate-parts inspector-state))
+           :content ,(prepare-inspector-range (istate-parts inspector-state)
+                                              (istate-content inspector-state)
+                                              0
+                                              100)))
+
+(define (assign-istate-index object parts)
+  (let ((i ($hash-table/count parts)))
+    ($hash-table/put! parts i object)
+    i))
+
+(define (prepare-inspector-range parts content from to)
+  (let* ((cs (substream content from to))
+         (ps (prepare-inspector-parts cs parts)))
+    (list ps
+          (if (< (length cs) (- to from))
+              (+ from (length cs))
+              (+ to 1000))
+          from to)))
+
+(define (prepare-inspector-parts ps parts)
+  (define (line label value)
+    `(,(string-append (display-to-string label) ": ")
+      (:value ,(ellipsize (write-to-string value)) ,(assign-istate-index value parts))
+      "\n"))
+  (apply append (map (lambda (p)
+                       (cond ((string? p) (list p))
+                             ((symbol? p) (list (symbol->string p)))
+                             (else
+                              (case (car p)
+                                ((line) (apply line (cdr p)))
+                                (else (error "Invalid part:" p))))))
+                     ps)))
+
+(define (swank/inspect object)
+  (cond ((boolean? object) (inspect-boolean object))
+        ((symbol? object)  (inspect-symbol object))
+        ((char? object)    (inspect-char object))
+        ((integer? object) (inspect-integer object))
+        ((pair? object)    (inspect-pair object))
+        ((vector? object)  (inspect-vector object))
+        ((string? object)  (inspect-string object))
+        (else
+         (inspect-unknown object))))
+
+(define (inspector-line label value)
+  `(line ,label ,value))
+
+(define (inspect-char object)
+  (stream (inspector-line "Character code" (char->integer object))
+          (inspector-line "Lower case" (char-downcase object))
+          (inspector-line "Upper case" (char-upcase object))))
+
+(define (inspect-integer object)
+  (stream "Value: " (number->string object)
+          " = #x" (number->string object 16)
+          " = #o" (number->string object 8)
+          " = #b" (number->string object 2)
+          "\n"
+          (inspector-line "Character" (integer->char object))))
+
+(define (inspect-pair pair)
+  (if (or (pair? (cdr pair))
+          (null? (cdr pair)))
+      (let loop ((l1 pair) (l2 pair) (i 0))
+        (cond ((pair? l1)
+               (stream-cons (inspector-line i (car l1))
+                            (let ((l1 (cdr l1)))
+                              (if (eq? l1 l2)
+                                  (stream "{circular list detected}")
+                                  (loop l1
+                                        (if (odd? i) (cdr l2) l2)
+                                        (+ i 1))))))
+              ((null? l1) (stream))
+              (else (stream (inspector-line "tail" (cdr l1))))))
+      (stream (inspector-line "car" (car pair))
+              (inspector-line "cdr" (cdr pair)))))
+
+(define (inspect-boolean object)
+  (stream (inspector-line "Boolean" object)))
+
+(define (inspect-symbol object)
+  (stream (inspector-line "Symbol" object)))
+
+(define (inspect-unknown object)
+  (stream (inspector-line "Object" object)))
+
+(define (inspect-vector object)
+  (stream-cons (inspector-line "Length" (vector-length object))
+               (let ((len (vector-length object)))
+                 (let loop ((i 0))
+                   (if (< i len)
+                       (stream-cons (inspector-line i (vector-ref object i))
+                                    (loop (+ i 1)))
+                       (stream))))))
+
+(define (inspect-string object)
+  (stream-cons (inspector-line "Length" (string-length object))
+               (let ((len (string-length object)))
+                 (let loop ((i 0))
+                   (if (< i len)
+                       (stream-cons (inspector-line i (string-ref object i))
+                                    (loop (+ i 1)))
+                       (stream))))))
+
+;;;; streams
+(define-syntax swank/delay
+  (syntax-rules ()
+    ((delay expr)
+     (lambda () expr))))
+
+(define (swank/force promise) (promise))
+
+(define (stream-cons a b)
+  (cons a (swank/delay b)))
+
+(define (stream-car p)
+  (car p))
+
+(define (stream-cdr p)
+  (swank/force (cdr p)))
+
+(define (stream . rest)
+  (list->stream rest))
+
+(define (list->stream list)
+  (if (pair? list)
+      (stream-cons (car list) (list->stream (cdr list)))
+      '()))
+
+(define (substream s from to)
+  (let loop ((i 0)
+             (l '())
+             (s s))
+    (cond ((or (if (null? to) #f (= i to)) (null? s)) (reverse l))
+          ((< i from) (loop (+ i 1) l (stream-cdr s)))
+          (else (loop (+ i 1) (cons (stream-car s) l) (stream-cdr s))))))

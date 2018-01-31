@@ -12,7 +12,7 @@
                     (param:environment ($environment env-name))
                     (param:current-id id))
        `(:return (:ok ,(process-form sexp env-name))
-                            ,id)))))
+                 ,id)))))
 
 (define-slime-handler (swank:connection-info)
   `(:pid 123
@@ -48,8 +48,8 @@
 	 (results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form)))))))
     (for-each (lambda (val)
                 (if (presentations?)
-		  (present val ':repl-result)
-		  (swank/write-string val 'repl-result)))
+                    (present val ':repl-result)
+                    (swank/write-string val 'repl-result)))
               results)
     '()))
 
@@ -92,15 +92,16 @@
                (signature (car signature+doc))
                (doc (cdr signature+doc)))
           (let ((answer (if signature (let* ((signature (highlight-at-cursor signature expr)))
-                                  (with-output-to-string (lambda ()
-                                                           (write signature)
-                                                           (if doc
-                                                               (begin
-                                                                 (display " -- ")
-                                                                 (display doc))))))
+                                        (with-output-to-string (lambda ()
+                                                                 (write signature)
+                                                                 (if doc
+                                                                     (begin
+                                                                       (display " -- ")
+                                                                       (display doc))))))
                             ':not-available)))
             (list answer 't)))
         (list ':not-available 't))))
+
 (define-slime-handler (swank:frame-locals-and-catch-tags nr)
   ;; (:return
   ;;  (:ok
@@ -109,9 +110,11 @@
   ;;    nil))
   ;;  8)
   ($frame-locals-and-catch-tags nr))
+
 (define-slime-handler (swank:throw-to-toplevel)
   (set! *throw-to-top-level* #t)
   (swank/abort (param:condition:msg)))
+
 (define-slime-handler (swank:backtrace from to)
   ;; (:return
   ;;  (:ok
@@ -123,3 +126,81 @@
     (let ((from (min from (length trace)))
           (to (min to (length trace))))
       (take (list-tail trace from) (- to from)))))
+
+(define-slime-handler (swank:init-inspector string-form)
+  (reset-inspector)
+  (let ((vals (interactive-eval (read (open-input-string string-form)))))
+    (inspect-object (car vals))))
+
+(define-slime-handler (swank:inspector-range from to)
+  (prepare-inspector-range (istate-parts inspector-state)
+                           (istate-content inspector-state)
+                           from to))
+
+(define-slime-handler (swank:inspect-nth-part index)
+  (inspect-object ($hash-table/get (istate-parts inspector-state) index 'no-such-part)))
+
+(define-slime-handler (swank:inspector-pop)
+  (if (and inspector-state (istate-previous inspector-state))
+      ;; bug in chibi with begin
+      (let ()
+        (set! inspector-state (istate-previous inspector-state))
+        (istate->elisp inspector-state))
+      'nil))
+
+(define-slime-handler (swank:inspector-next)
+  (if (istate-next inspector-state)
+      (let ()
+        (set! inspector-state (istate-next inspector-state))
+        (istate->elisp inspector-state))
+      'nil))
+
+(define-slime-handler (swank:inspector-reinspect)
+  (istate->elisp inspector-state))
+
+(define-slime-handler (swank:inspector-toggle-verbose)
+  ;; seems to toggle how the title is shown in sbcl
+  (istate->elisp inspector-state))
+
+(define-slime-handler (swank:inspector-history)
+  ;; (:return
+  ;;  (:ok "--- next/prev chain ---
+  ;;   @2 #<BASE-CHAR {149}>
+  ;;   @1 #<BIT {2}>
+  ;;  *@0 #<(SIMPLE-VECTOR 3) {1001AF0EAF}>
+
+  ;; --- all visited objects ---
+  ;;  0 #<(SIMPLE-VECTOR 3) {1001AF0EAF}>
+  ;;  1 #<BIT {2}>
+  ;;  2 #<BASE-CHAR {149}>")
+  ;;  14)
+  (define (add-line current i result)
+    (string-append result
+                   " " (if (eq? current inspector-state) "*" " ")
+                   "@" (number->string i)
+                   " " (ellipsize (write-to-string (istate-object current)))
+                   "\n"))
+  (let ((first (let loop ((start inspector-state))
+                 (if (istate-previous start)
+                     (loop (istate-previous start))
+                     start))))
+    (let loop ((result "--- next/prev chain ---\n")
+               (i 0)
+               (current first))
+      (if (istate-next current)
+          (loop (add-line current i result)
+                (+ i 1)
+                (istate-next current))
+          (add-line current i result)))))
+
+(define-slime-handler (swank:pprint-inspector-part index)
+  (with-output-to-string
+    (lambda ()
+      ($pretty-print ($hash-table/get (istate-parts inspector-state) index 'no-such-part)))))
+
+;; inspector, M-RET
+;; (define-slime-handler (swank:listener-save-value type index)
+;;   'todo)
+
+;; (define-slime-handler (swank:listener-get-value)
+;;   'todo)

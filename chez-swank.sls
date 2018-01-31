@@ -11,4 +11,8 @@
           (socket net))
   (include "specific/chez.ss")
   (include "common/base.scm")
-  (include "common/handlers.scm"))
+  (include "common/handlers.scm")
+  
+  ;; print everything possible
+  (print-extended-identifiers #t)
+)
