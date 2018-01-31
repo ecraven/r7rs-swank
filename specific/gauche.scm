@@ -11,6 +11,8 @@
 
 (define $hash-table/get hash-table-ref/default)
 
+(define $hash-table/count hash-table-size)
+
 (define ($all-package-names)
   (map module-name (all-modules)))
 
@@ -42,7 +44,12 @@
         (apply values x)))))
 
 (define ($function-parameters-and-documentation name)
-  (cons #f #f))
+  (let* ((binding (car (interactive-eval (string->symbol name))))
+         (parameters (if (and binding
+                              (eq? <procedure> (class-of binding)))
+                         (ref binding 'info)
+                         #f)))
+    (cons parameters #f)))
 
 (define ($set-package name)
   (list "(user)" "(user)"))
@@ -56,6 +63,9 @@
 (define ($frame-locals-and-catch-tags nr)
   '())
 
+(define ($frame-var-value frame index)
+  #f)
+
 (define ($condition-msg condition)
   "UNKNOWN")
 
@@ -64,3 +74,47 @@
 
 (define ($handle-condition exception)
   #f)
+
+(define (string-match-forward a b)
+  (let* ((a-len (string-length a))
+         (b-len (string-length b))
+         (min-len (min a-len b-len)))
+    (let loop ((i 0))
+      (if (> i min-len)
+          (- i 1)
+          (if (string=? (substring a 0 i) (substring b 0 i))
+              (loop (+ i 1))
+              (- i 1))))))
+(define (longest-common-prefix strings)
+  (if (null? strings)
+      ""
+      (fold (lambda (s1 s2) (substring s2 0 (string-match-forward s1 s2))) (car strings) (cdr strings))))
+(define ($completions prefix env-name)
+  (let ((result '()))
+    (define (search m)
+      (hash-table-for-each (module-table m)
+                           (lambda (symbol value)
+                             (if (string-prefix? prefix (symbol->string symbol))
+                                 (set! result (cons (symbol->string symbol) result))))))
+    (let ((mod ($environment env-name)))
+      (for-each (lambda (m) (for-each search (module-precedence-list m)))
+                (module-imports mod))
+      (for-each search
+                (module-precedence-list mod))
+      
+      (cons result
+            (longest-common-prefix result)))))
+
+(define-record-type <istate>
+  (make-istate object parts next previous content)
+  istate?
+  (object istate-object)
+  (parts istate-parts)
+  (next istate-next set-istate-next!)
+  (previous istate-previous)
+  (content istate-content))
+
+(define ($inspect-fallback object)
+  #f)
+
+(define $pretty-print pprint)
