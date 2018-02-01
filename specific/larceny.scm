@@ -1,4 +1,3 @@
-(require 'socket)
 (define ($scheme-name)
   "larceny")
 (define ($all-package-names)
@@ -7,10 +6,12 @@
 (define $make-hash-table make-hash-table)
 (define $hash-table/get hash-table-ref/default)
 (define $hash-table/put! hash-table-set!)
+(define $hash-table/count hash-table-size)
 (define ($error-description error)
   (let ((o (open-output-string)))
     (display error o)
     (get-output-string o)))
+
 (define ($open-tcp-server/accept port-number handler)
   (let ((s (make-server-socket port-number 'blocking)))
     (let-values (((ns addr) (server-socket-accept s)))
@@ -46,6 +47,9 @@
 (define ($frame-locals-and-catch-tags nr)
   '())
 
+(define ($frame-var-value frame index)
+  #f)
+
 (define ($condition-msg condition)
   "UNKNOWN")
 
@@ -53,4 +57,18 @@
   '())
 
 (define ($handle-condition exception)
+  #f)
+
+(define $pretty-print pretty-print)
+
+(define-record-type <istate>
+  (make-istate object parts next previous content)
+  istate?
+  (object istate-object)
+  (parts istate-parts)
+  (next istate-next set-istate-next!)
+  (previous istate-previous)
+  (content istate-content))
+
+(define ($inspect-fallback object)
   #f)
