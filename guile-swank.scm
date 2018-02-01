@@ -8,7 +8,8 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:use-module (ice-9 pretty-print)
-  #:export (start-swank))
+  #:export (start-swank swank:lookup-presented-object
+                        swank:lookup-presented-object-or-lose))
 
 (include "specific/guile.scm")
 (include "common/base.scm")
