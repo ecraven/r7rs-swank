@@ -64,9 +64,9 @@
                                       (error "Please call with port number or filename to which the automatically chosen port number will be written."))))))
 
 (define (server-loop port-number port-file)
-  (display "swank listening on " log-port) (display port-number log-port) (newline log-port) (flush-output-port log-port)
   ($open-tcp-server/accept port-number
                            (lambda (actual-port-number in out)
+                             (display "swank listening on " log-port) (display port-number log-port) (newline log-port) (flush-output-port log-port)
                              (when port-file
                                (when (file-exists? port-file)
                                  (delete-file port-file))
