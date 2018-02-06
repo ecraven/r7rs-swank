@@ -203,13 +203,16 @@ The secondary value indicates the absence of an entry."
           (list '!rest lst))))
 
 (define (find-expression-containing-swank-cursor-marker expr)
-  (if (list? expr)
-      (if (member '|swank::%cursor-marker%| expr)
-          expr
-          (find (lambda (ex)
-                  (find-expression-containing-swank-cursor-marker ex))
-                expr))
-      #f))
+  (define (f expr exit)
+    (if (list? expr)
+        (if (member '|swank::%cursor-marker%| expr)
+            expr
+            (let ((res (find (lambda (ex)
+                               (f ex exit))
+                             expr)))
+              (if res (exit res) res)))
+        #f))
+  (call-with-current-continuation (lambda (exit) (f expr exit))))
 
 (define (highlight-at-cursor signature expr)
   (let* ((form (find-expression-containing-swank-cursor-marker (cdr expr)))
