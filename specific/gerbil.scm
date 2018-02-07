@@ -167,3 +167,9 @@
 	    value)))
     ;;otherwise, back to normal
     (%repl-result-history-ref id)))
+
+(define ($binding-documentation name)
+  #f)
+
+(define ($apropos name)
+  '())

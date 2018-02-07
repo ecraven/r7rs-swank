@@ -236,3 +236,20 @@
 
 (define-slime-handler (swank:buffer-first-change filename)
   'nil)
+
+(define-slime-handler (swank:apropos-list-for-emacs name external-only? case-sensitive? package)
+  (map (lambda (el)
+         (let ((name (car el))
+               (type (cadr el))
+               (documentation (or (caddr el) ':not-documented)))
+           `(:designator ,(write-to-string name) ,type ,documentation)))
+   ($apropos name)))
+
+(define-slime-handler (swank:describe-definition-for-emacs name type)
+  (describe-symbol name))
+
+(define-slime-handler (swank:describe-symbol name)
+  (describe-symbol name))
+
+(define-slime-handler (swank:describe-function name)
+  (describe-symbol name))

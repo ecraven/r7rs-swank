@@ -446,6 +446,16 @@ The secondary value indicates the absence of an entry."
                                     (loop (+ i 1)))
                        (stream))))))
 
+(define (binding-value symbol)
+  (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval symbol (param:environment)))))))
+
+(define (describe-symbol name)
+  (let* ((value (binding-value (string->symbol name)))
+         (doc ($binding-documentation value)))
+    (string-append name "\n"
+                   (if doc doc "")
+                   "\n"
+                   "It is bound to:\n" (write-to-string value))))
 ;;;; streams
 (define-syntax swank/delay
   (syntax-rules ()
@@ -478,3 +488,4 @@ The secondary value indicates the absence of an entry."
     (cond ((or (if (null? to) #f (= i to)) (null? s)) (reverse l))
           ((< i from) (loop (+ i 1) l (stream-cdr s)))
           (else (loop (+ i 1) (cons (stream-car s) l) (stream-cdr s))))))
+

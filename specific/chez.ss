@@ -45,22 +45,26 @@
                     (+ i 1))
               (reverse result))))))
 
-(define (binding-documentation p)
+(define ($binding-documentation p)
   ;; same as (inspect object), then hitting c
-  (let ((s (((inspect/object p) 'code) 'source)))
-    (if s
-        (let ((form (s 'value)))
-          (cond ((and (list? form)
-                      (> (length form) 3)
-                      (eq? (car form) 'lambda)
-                      (string? (caddr form)))
-                 (caddr form))
-                ((and (list? form)
-                      (> (length form) 2)
-                      (eq? (car form) 'case-lambda))
-                 '(case-lambda))
-                (else
-                 #f)))
+  
+  (let ((o (inspect/object p)))
+    (if (eq? (o 'type) 'procedure)
+        (let ((s ((o 'code) 'source)))
+          (if s
+              (let ((form (s 'value)))
+                (cond ((and (list? form)
+                            (> (length form) 3)
+                            (eq? (car form) 'lambda)
+                            (string? (caddr form)))
+                       (caddr form))
+                      ((and (list? form)
+                            (> (length form) 2)
+                            (eq? (car form) 'case-lambda))
+                       '(case-lambda))
+                      (else
+                       #f)))
+              #f))
         #f)))
 
 (define (procedure-parameter-list p)
@@ -84,7 +88,7 @@
   (let* ((binding (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval (string->symbol name) (param:environment)))))))
          (param-list (if binding (procedure-parameter-list binding) #f))
          (signature (if param-list (cons (string->symbol name) param-list) #f))
-         (doc (if binding (binding-documentation binding) #f)))
+         (doc (if binding ($binding-documentation binding) #f)))
     (cons signature doc)))
 
 ;; (define (%write-to-string val)
@@ -229,6 +233,7 @@
 (define ($frame-var-value frame index)
   ((((list-ref (param:active-continuations) frame) 'ref index) 'ref) 'value))
 
+
 (define take list-head)
 (define drop list-tail)
 (define-structure (istate object parts actions next previous content))
@@ -266,3 +271,14 @@
                 i
                 (loop (+ i 1)))))))))
 
+(define ($apropos name)
+  "Return a list of (name type documentation) for all matches for NAME."
+  (let ((lst (apropos-list name)))
+    (map (lambda (sym)
+           (let* ((binding (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval sym (param:environment)))))))
+                  (doc ($binding-documentation binding))
+                  (type (cond ((procedure? binding) ':function)
+                              (else ':variable))))
+             (list sym type doc)))
+         (filter symbol? lst)) ;; ignore other packages for now, only use direct symbols
+    ))

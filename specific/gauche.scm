@@ -124,3 +124,23 @@
   #f)
 
 (define $pretty-print pprint)
+
+
+(define ($binding-documentation name)
+  #f)
+
+(define ($apropos name)
+  (let ((result '()))
+    (define (search m)
+      (hash-table-for-each (module-table m)
+                           (lambda (symbol value)
+                             (if (string-contains (symbol->string symbol) name)
+                                 (set! result (cons (list symbol ':function #f) result))))))
+    (let ((mod (param:environment)))
+      (for-each (lambda (m) (for-each search (module-precedence-list m)))
+                (module-imports mod))
+      (for-each search
+                (module-precedence-list mod))
+      
+      result)))
+
