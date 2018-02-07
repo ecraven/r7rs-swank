@@ -18,12 +18,16 @@
     (handler port-number port port)))
 
 (define $make-hash-table make-hash-table)
-
 (define $hash-table/put! hash-table-set!)
-
 (define $hash-table/get hash-table-ref/default)
-
 (define $hash-table/count hash-table-size)
+(define $hash-table? hash-table?)
+(define ($hash-table/clear! table)
+  ($hash-table-walk table
+                    (lambda (key value)
+                      ($hash-table/remove! table key))))
+(define $hash-table/remove! hash-table-delete!)
+(define $hash-table-walk hash-table-walk)
 
 (define fop flush-output-port)
 (define (flush-output-port . port) (fop (if (null? port) (current-output-port) (car port))))
@@ -143,10 +147,11 @@
 (define $pretty-print pretty-print)
 
 (define-record-type <istate>
-  (make-istate object parts next previous content)
+  (make-istate object parts actions next previous content)
   istate?
   (object istate-object)
   (parts istate-parts)
+  (actions istate-actions)
   (next istate-next set-istate-next!)
   (previous istate-previous)
   (content istate-content))

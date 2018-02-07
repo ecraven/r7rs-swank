@@ -62,10 +62,11 @@
 (define $pretty-print pretty-print)
 
 (define-record-type <istate>
-  (make-istate object parts next previous content)
+  (make-istate object parts actions next previous content)
   istate?
   (object istate-object)
   (parts istate-parts)
+  (actions istate-actions)
   (next istate-next set-istate-next!)
   (previous istate-previous)
   (content istate-content))

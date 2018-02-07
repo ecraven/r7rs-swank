@@ -7,12 +7,13 @@
 
 ;; kawa reads foo:bar as ($lookup$ foo (quasiquote bar)), so equal?, not eq?
 (define ($make-hash-table) (make-hashtable equal-hash equal?))
-
 (define $hash-table/put! hashtable-set!)
-
 (define $hash-table/get hashtable-ref)
-
 (define $hash-table/count hashtable-size)
+(define $hash-table/clear! hashtable-clear!)
+(define $hash-table/remove! hashtable-delete!)
+(define $hash-table? hash-table?)
+(define $hash-table-walk hash-table-walk) ;; does this exist?
 
 (define ($error-description error)
   (error:toString))
@@ -116,10 +117,11 @@
 (define $pretty-print pprint)
 
 (define-record-type <istate>
-  (make-istate object parts next previous content)
+  (make-istate object parts actions next previous content)
   istate?
   (object istate-object)
   (parts istate-parts)
+  (actions istate-actions)
   (next istate-next set-istate-next!)
   (previous istate-previous)
   (content istate-content))
