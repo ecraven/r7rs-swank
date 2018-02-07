@@ -112,7 +112,7 @@
 (define $hash-table/get hashtable-ref)
 (define $hash-table/count hashtable-size)
 (define $hash-table? hash-table?)
-(define ($hash-table-for-each fun table) (hash-table-for-each table fun))
+(define $hash-table-walk hash-table-for-each)
 (define $hash-table/clear! hashtable-clear!)
 (define $hash-table/remove! hashtable-delete!)
 

@@ -53,11 +53,11 @@
 (define $hash-table/get hash-ref)
 (define $hash-table/count hash-length)
 (define $hash-table? hash-table?)
-(define $hash-table-for-each hash-for-each)
+(define ($hash-table-walk table fun) (hash-for-each fun table))
 (define ($hash-table/clear! table)
-  ($hash-table-for-each (lambda (key value)
-                          ($hash-table/remove! table key))
-                        table))
+  ($hash-table-walk table
+                    (lambda (key value)
+                      ($hash-table/remove! table key))))
 (define $hash-table/remove! hash-remove!)
 
 ;; TODO remove when let-values works correctly

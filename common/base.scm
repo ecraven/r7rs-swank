@@ -420,9 +420,9 @@ The secondary value indicates the absence of an entry."
 
 (define (inspect-hash-table object)
   (let ((elements '()))
-    ($hash-table-for-each (lambda (key value)
-                            (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () ($hash-table/remove! object key))) '(newline) elements)))
-                          object)
+    ($hash-table-walk object
+                          (lambda (key value)
+                            (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () ($hash-table/remove! object key))) '(newline) elements))))
     (stream-cons (inspector-line "Length" ($hash-table/count object))
                  (stream-cons `(action "[clear hash table]" ,(lambda () ($hash-table/clear! object)))
                               (stream-cons '(newline)
