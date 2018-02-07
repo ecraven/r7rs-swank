@@ -338,14 +338,16 @@ The secondary value indicates the absence of an entry."
                      ps)))
 
 (define (swank/inspect object)
-  (cond ((boolean? object)    (inspect-boolean object))
-        ((symbol? object)     (inspect-symbol object))
-        ((char? object)       (inspect-char object))
-        ((integer? object)    (inspect-integer object))
-        ((pair? object)       (inspect-pair object))
-        ((vector? object)     (inspect-vector object))
-        ((bytevector? object) (inspect-bytevector object))
-        ((string? object)     (inspect-string object))
+  (cond ((boolean? object)     (inspect-boolean object))
+        ((symbol? object)      (inspect-symbol object))
+        ((char? object)        (inspect-char object))
+        ((integer? object)     (inspect-integer object))
+        ((pair? object)        (inspect-pair object))
+        ((vector? object)      (inspect-vector object))
+        ((bytevector? object)  (inspect-bytevector object))
+        ((string? object)      (inspect-string object))
+	(($hash-table? object) (inspect-pair
+				($hash-table->list object)))
         (else
          (inspect-unknown object))))
 

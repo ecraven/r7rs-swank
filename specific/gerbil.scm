@@ -50,6 +50,10 @@
 
 (define $make-hash-table make-hash-table)
 
+(define $hash-table? hash-table?)
+
+(define $hash-table->list hash->list)
+
 (define $hash-table/put! hash-put!)
 
 (define $hash-table/get hash-ref)
