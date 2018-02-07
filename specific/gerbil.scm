@@ -49,12 +49,16 @@
     (handler port-number c c)))
 
 (define $make-hash-table make-hash-table)
-
 (define $hash-table/put! hash-put!)
-
 (define $hash-table/get hash-ref)
-
 (define $hash-table/count hash-length)
+(define $hash-table? hash-table?)
+(define $hash-table-for-each hash-for-each)
+(define ($hash-table/clear! table)
+  ($hash-table-for-each (lambda (key value)
+                          ($hash-table/remove! table key))
+                        table))
+(define $hash-table/remove! hash-remove!)
 
 ;; TODO remove when let-values works correctly
 (define-syntax let-values
@@ -142,10 +146,11 @@
   #f)
 
 (define-record-type <istate>
-  (make-istate object parts next previous content)
+  (make-istate object parts actions next previous content)
   istate?
   (object istate-object)
   (parts istate-parts)
+  (actions istate-actions)
   (next istate-next set-istate-next!)
   (previous istate-previous)
   (content istate-content))

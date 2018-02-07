@@ -108,12 +108,13 @@
           (handler port-number p p)))))
 
 (define $make-hash-table make-hash-table)
-
 (define $hash-table/put! hashtable-set!)
-
 (define $hash-table/get hashtable-ref)
-
 (define $hash-table/count hashtable-size)
+(define $hash-table? hash-table?)
+(define ($hash-table-for-each fun table) (hash-table-for-each table fun))
+(define $hash-table/clear! hashtable-clear!)
+(define $hash-table/remove! hashtable-delete!)
 
 (define (read-bytevector size port)
   (get-bytevector-n port size))
@@ -230,7 +231,7 @@
 
 (define take list-head)
 (define drop list-tail)
-(define-structure (istate object parts next previous content))
+(define-structure (istate object parts actions next previous content))
 
 (define $pretty-print pretty-print)
 

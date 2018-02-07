@@ -5,7 +5,9 @@
   (import (scheme base) (scheme file) (scheme write) (scheme read) (scheme eval) (scheme repl) (scheme process-context) (scheme load) (scheme cxr) (scheme char)
           (std srfi |13|) (std srfi |1|)
           (only (gerbil/gambit) open-tcp-server pp)
-          (only (gerbil/core) hash-ref hash-put! hash-length make-hash-table exit values->list hash->list filter) ;; values->list should go when let-values works
+          (only (gerbil/core) hash-ref hash-put! hash-table? hash-for-each hash-length
+                make-hash-table exit values->list hash->list filter
+                hash-remove!) ;; values->list should go when let-values works
           (only (gerbil/expander) module-context? module-context-ns expander-context-id expander-context-table current-expander-module-registry)
           (only (gerbil/gambit/exceptions) display-exception))
   (include "specific/gerbil.scm")

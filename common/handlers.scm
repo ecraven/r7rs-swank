@@ -134,11 +134,16 @@
 
 (define-slime-handler (swank:inspector-range from to)
   (prepare-inspector-range (istate-parts inspector-state)
+                           (istate-actions inspector-state)
                            (istate-content inspector-state)
                            from to))
 
 (define-slime-handler (swank:inspect-nth-part index)
   (inspect-object ($hash-table/get (istate-parts inspector-state) index 'no-such-part)))
+
+(define-slime-handler (swank::inspector-call-nth-action index)
+  (($hash-table/get (istate-actions inspector-state) index (lambda () #f)))
+  (inspect-object (istate-object inspector-state)))
 
 (define-slime-handler (swank:inspector-pop)
   (if (and inspector-state (istate-previous inspector-state))
@@ -228,3 +233,6 @@
                    result
                    (loop (cdr vals)
                          (string-append result ", " (car vals))))))))))
+
+(define-slime-handler (swank:buffer-first-change filename)
+  'nil)
