@@ -79,7 +79,7 @@
     `(:compilation-result nil t 0.001 nil nil)))
 
 (define-slime-handler (swank:load-file filename)
-  (let ((results ($output-to-repl (lambda () (load filename (interaction-environment))))))
+  (let ((results ($output-to-repl (lambda () (load filename (param:environment))))))
     'loaded))
 
 (define-slime-handler (swank:set-package name)
@@ -141,7 +141,7 @@
 (define-slime-handler (swank:inspect-nth-part index)
   (inspect-object ($hash-table/get (istate-parts inspector-state) index 'no-such-part)))
 
-(define-slime-handler (swank::inspector-call-nth-action index)
+(define-slime-handler (swank:inspector-call-nth-action index)
   (($hash-table/get (istate-actions inspector-state) index (lambda () #f)))
   (inspect-object (istate-object inspector-state)))
 

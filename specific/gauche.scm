@@ -58,8 +58,9 @@
 (define ($set-package name)
   (list "(user)" "(user)"))
 
+(define env (interaction-environment))
 (define ($environment name)
-  (interaction-environment))
+  env)
 
 (define ($condition-trace condition)
   '())

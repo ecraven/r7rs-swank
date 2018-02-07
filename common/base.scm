@@ -24,7 +24,7 @@
 
 (define param:slime-in-port (make-parameter #f))
 (define param:slime-out-port (make-parameter #f))
-(define param:environment (make-parameter #f))
+(define param:environment (make-parameter (interaction-environment)))
 (define param:current-id (make-parameter #f))
 (define param:condition:msg (make-parameter "nil"))
 (define param:active-continuations (make-parameter #f))
