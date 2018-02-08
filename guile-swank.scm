@@ -3,8 +3,9 @@
   #:use-module (rnrs bytevectors)
   #:use-module (rnrs io ports)
   #:use-module (ice-9 binary-ports)
+  #:use-module (ice-9 documentation)
   #:use-module (srfi srfi-69)
-  #:use-module (srfi srfi-11)
+  #:use-module (srfi srfi-11) ;; let-values
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:use-module (ice-9 pretty-print)

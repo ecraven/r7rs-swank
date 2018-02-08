@@ -161,3 +161,35 @@
 
 (define exact inexact->exact)
 
+(define ($apropos name)
+  ;; based on guile's ice-9/session.scm
+  (let* ((pattern name)
+         (uses (module-uses (current-module)))
+         (modules (cons (current-module)
+                        (if (and (not (null? uses))
+                                 (eq? (module-name (car uses))
+                                      'duplicates))
+                            (cdr uses)
+                            uses))))
+    (let ((results '()))
+      (for-each
+       (lambda (module)
+         (let* ((name (module-name module))
+                (obarray (module-obarray module)))
+           ;; XXX - should use hash-fold here
+           (hash-for-each
+            (lambda (symbol variable)
+              (if (string-contains-ci (symbol->string symbol) pattern)
+                  (let* ((binding
+                         (if (variable-bound? variable)
+                             (variable-ref variable)
+                             #f))
+                         (documentation ($binding-documentation binding))
+                         (type (if (procedure? binding) ':function ':variable)))
+                    (set! results (cons (list symbol type documentation) results)))))
+            obarray)))
+       modules)
+      results)))
+
+(define ($binding-documentation value)
+  (object-documentation value))
