@@ -63,11 +63,11 @@
              (rest (substring prefix (+ (string-length first) 1) (string-length prefix))))
         (define (filter-relevant names)
           (filter-map (lambda (name)
-                    (let ((p :: String (string-append first ":" name)))
-                      (if (p:startsWith prefix)
-                          p
-                          #f)))
-                  names))
+                        (let ((p :: String (string-append first ":" name)))
+                          (if (p:startsWith prefix)
+                              p
+                              #f)))
+                      names))
         (let ((binding (call/cc (lambda (k) (with-exception-handler (lambda (condition) (k #f))
                                                                (lambda ()
                                                                  (eval (string->symbol first) (env-name->environment env-name))))))))
@@ -81,7 +81,7 @@
       '()))
 (define ($completions prefix env-name)
   (let* ((matches (filter (lambda (el :: java.lang.String) (el:startsWith prefix))
-                         (map symbol->string (environment-bindings (env-name->environment env-name)))))
+                          (map symbol->string (environment-bindings (env-name->environment env-name)))))
          (java-matches (find-java-matches prefix env-name))
          (all (append matches java-matches)))
     (cons all
@@ -128,3 +128,17 @@
   (next istate-next set-istate-next!)
   (previous istate-previous)
   (content istate-content))
+
+(define ($apropos name)
+  (let ((env ($environment (param:environment))))
+    (environment-fold env
+                      (lambda (key accumulator)
+                        (if (and (symbol? key)
+                                 (string-contains-ci (symbol->string key) name))
+                            (let ((value (eval key env)))
+                              (cons (list key (if (procedure? value) ':function ':variable) ($binding-documentation value)) accumulator))
+                            accumulator))
+                      '())))
+
+(define ($binding-documentation value)
+  "")
