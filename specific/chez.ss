@@ -241,7 +241,18 @@
 (define $pretty-print pretty-print)
 
 (define ($inspect-fallback object)
-  #f)
+  (cond ((record? object)
+         (let* ((type (record-rtd object))
+                (field-names (vector->list (record-type-field-names type)))
+                (len (length field-names))
+                (field-values (map (lambda (i) ((record-accessor type i) object)) (iota len))))
+           (let loop ((n field-names)
+                      (v field-values))
+             (if (null? n)
+                 (stream)
+                 (stream-cons (inspector-line (car n) (car v))
+                              (loop (cdr n) (cdr v)))))))
+        (else #f)))
 
 ;;;; srfi-13 parts
 (define (string-replace s1 s2 start1 end1) ;; . start2+end2
