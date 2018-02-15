@@ -61,12 +61,16 @@
                       ((and (list? form)
                             (> (length form) 2)
                             (eq? (car form) 'case-lambda))
-                       '(case-lambda))
+                       (write-to-string (cons 'case-lambda (map car (cdr form)))))
                       (else
                        #f)))
               #f))
         #f)))
 
+;; TODO: this needs to get passed the actual parameters
+;; to decide which case-lambda form to show
+(define (matching-case-lambda-form forms)
+  (car forms))
 (define (procedure-parameter-list p)
   ;; same as (inspect object), then hitting c
   (let ((o (inspect/object p)))
@@ -81,7 +85,10 @@
                       ((and (list? form)
                             (> (length form) 2)
                             (eq? (car form) 'case-lambda))
-                       '(case-lambda))
+                       (let ((forms (map car (cdr form))))
+                         ;; TODO: this needs to get passed the actual parameters
+                         ;; to decide which case-lambda form to show
+                         (matching-case-lambda-form forms)))
                       (else
                        #f)))
               #f))
