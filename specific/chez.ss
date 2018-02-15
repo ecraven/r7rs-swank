@@ -87,11 +87,28 @@
               #f))
         #f)))
 
+(define (built-in-signature value)
+  (let ((q (get-hash-table *built-in-signatures* value #f)))
+    (if q (car q) #f)))
+(define (built-in-documentation value)
+  (let ((q (get-hash-table *built-in-signatures* value #f)))
+    (if q (cdr q) #f)))
+
+(define *built-in-signatures* (make-hash-table))
+
+(define (define-built-in-doc value signature documentation)
+  (put-hash-table! *built-in-signatures* value (cons signature documentation)))
+
 (define ($function-parameters-and-documentation name)
+  (when (zero? ($hash-table/count *built-in-signatures*))
+    (init-built-in-signatures))
   (let* ((binding (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval (string->symbol name) (param:environment)))))))
          (param-list (if binding (procedure-parameter-list binding) #f))
-         (signature (if param-list (cons (string->symbol name) param-list) #f))
-         (doc (if binding ($binding-documentation binding) #f)))
+         (signature (if param-list
+                        (cons (string->symbol name) param-list)
+                        (built-in-signature binding)))
+         (doc (or (if binding ($binding-documentation binding) #f)
+                  (built-in-documentation binding))))
     (cons signature doc)))
 
 ;; (define (%write-to-string val)
@@ -296,3 +313,11 @@
              (list sym type doc)))
          (filter symbol? lst)) ;; ignore other packages for now, only use direct symbols
     ))
+(define (init-built-in-signatures)
+  (define-built-in-doc + '(+ . n)
+    "")
+  (define-built-in-doc - '(- n0 . n)
+    "")
+  (define-built-in-doc foreign-alloc '(foreign-alloc n)
+    "Allocate N bytes.")
+  )

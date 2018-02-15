@@ -85,6 +85,13 @@
 (define-slime-handler (swank:set-package name)
   ($set-package name))
 
+(define-slime-handler (swank:operator-arglist op-string env-name)
+  (let* ((signature+doc ($function-parameters-and-documentation op-string))
+         (signature (car signature+doc)))
+    (if signature
+        (write-to-string signature)
+        "")))
+
 (define-slime-handler (swank:autodoc expr . params)
   (let* ((op-string (find-string-before-swank-cursor-marker expr)))
     (if op-string
