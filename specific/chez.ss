@@ -69,19 +69,22 @@
 
 (define (procedure-parameter-list p)
   ;; same as (inspect object), then hitting c
-  (let ((s (((inspect/object p) 'code) 'source)))
-    (if s
-        (let ((form (s 'value)))
-          (cond ((and (list? form)
-                      (> (length form) 2)
-                      (eq? (car form) 'lambda))
-                 (cadr form))
-                ((and (list? form)
-                      (> (length form) 2)
-                      (eq? (car form) 'case-lambda))
-                 '(case-lambda))
-                (else
-                 #f)))
+  (let ((o (inspect/object p)))
+    (if (eq? 'procedure (o 'type))
+        (let ((s ((o 'code) 'source)))
+          (if s
+              (let ((form (s 'value)))
+                (cond ((and (list? form)
+                            (> (length form) 2)
+                            (eq? (car form) 'lambda))
+                       (cadr form))
+                      ((and (list? form)
+                            (> (length form) 2)
+                            (eq? (car form) 'case-lambda))
+                       '(case-lambda))
+                      (else
+                       #f)))
+              #f))
         #f)))
 
 (define ($function-parameters-and-documentation name)

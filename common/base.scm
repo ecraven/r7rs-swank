@@ -489,3 +489,6 @@ The secondary value indicates the absence of an entry."
           ((< i from) (loop (+ i 1) l (stream-cdr s)))
           (else (loop (+ i 1) (cons (stream-car s) l) (stream-cdr s))))))
 
+(define (inspect-in-emacs object)
+  (write-message `(:inspect ,(inspect-object object) nil nil))
+  #t)

@@ -2,7 +2,8 @@
   (export start-swank
           swank:get-last-exception
           swank:lookup-presented-object-or-lose
-          swank:lookup-presented-object)
+          swank:lookup-presented-object
+          inspect-in-emacs)
   (import (rename (chezscheme)
                   (bytevector-copy! %bytevector-copy!)
                   (load %load)
