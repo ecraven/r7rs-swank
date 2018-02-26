@@ -327,4 +327,11 @@
     "")
   (define-built-in-doc foreign-alloc '(foreign-alloc n)
     "Allocate N bytes.")
+  ;; syntax...
+  ;; (define-built-in-doc ftype-set! '(ftype-set! ftype-name (a ...) fptr-expr [index] val-expr)
+  ;;   "")
+  ;; (define-built-in-doc ftype-ref '(ftype-ref ftype-name (a ...) fptr-expr [index])
+  ;;   "")
+  (define-built-in-doc make-date '(make-date nsec sec min hour day mon year offset)
+    "")
   )
