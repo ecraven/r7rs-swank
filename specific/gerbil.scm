@@ -43,10 +43,14 @@
 (define ($set-package name)
   (list name name))
 
-(define ($open-tcp-server/accept port-number handler)
-  (let* ((p (open-tcp-server port-number))
-         (c (read p)))
-    (handler port-number c c)))
+(define ($open-tcp-server port-number port-file handler)
+  (let ((n (or port-number (+ 10000 (random-integer 40000)))))
+    (let* ((p (open-tcp-server port-number)))
+      (handler n p))))
+
+(define ($tcp-server-accept p handler)
+  (let ((c (read p)))
+      (handler c c)))
 
 (define $make-hash-table make-hash-table)
 (define $hash-table/put! hash-put!)

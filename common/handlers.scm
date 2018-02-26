@@ -261,3 +261,7 @@
 
 (define-slime-handler (swank:describe-function name)
   (describe-symbol name))
+
+(define-slime-handler (swank:list-threads)
+  `((:id :name :status)
+    (1 "repl-thread" "Running")))

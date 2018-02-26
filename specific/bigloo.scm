@@ -1,3 +1,58 @@
+;;;; srfi-39
+(define make-parameter
+  (lambda (init . conv)
+    (let ((converter
+           (if (null? conv) (lambda (x) x) (car conv))))
+      (let ((global-cell
+             (cons #f (converter init))))
+        (letrec ((parameter
+                  (lambda new-val
+                    (let ((cell (dynamic-lookup parameter global-cell)))
+                      (cond ((null? new-val)
+                             (cdr cell))
+                            ((null? (cdr new-val))
+                             (set-cdr! cell (converter (car new-val))))
+                            (else ; this case is needed for parameterize
+                             (converter (car new-val))))))))
+          (set-car! global-cell parameter)
+          parameter)))))
+
+(define-syntax parameterize
+  (syntax-rules ()
+    ((parameterize ((expr1 expr2) ...) body ...)
+     (dynamic-bind (list expr1 ...)
+                   (list expr2 ...)
+                   (lambda () body ...)))))
+
+(define dynamic-bind
+  (lambda (parameters values body)
+    (let* ((old-local
+            (dynamic-env-local-get))
+           (new-cells
+            (map (lambda (parameter value)
+                   (cons parameter (parameter value #f)))
+                 parameters
+                 values))
+           (new-local
+            (append new-cells old-local)))
+      (dynamic-wind
+          (lambda () (dynamic-env-local-set! new-local))
+          body
+          (lambda () (dynamic-env-local-set! old-local))))))
+
+(define dynamic-lookup
+  (lambda (parameter global-cell)
+    (or (assq parameter (dynamic-env-local-get))
+        global-cell)))
+
+(define dynamic-env-local '())
+
+(define dynamic-env-local-get
+  (lambda () dynamic-env-local))
+
+(define dynamic-env-local-set!
+  (lambda (new-env) (set! dynamic-env-local new-env)))
+;;;; end srfi-39
 (define ($scheme-name)
   "bigloo")
 (define-syntax case-lambda
@@ -18,8 +73,8 @@
 (define $hash-table/count hashtable-size)
 (define ($hash-table/clear! table)
   ($hash-table-walk table
-                        (lambda (key value)
-                          ($hash-table/remove! table key))))
+                    (lambda (key value)
+                      ($hash-table/remove! table key))))
 (define $hash-table/remove! hashtable-remove!)
 (define $hash-table-walk hashtable-for-each)
 (define $hash-table? hashtable?)
@@ -34,11 +89,13 @@
 (define (bytevector-u8-ref bv n) (char->integer (string-ref bv n)))
 (define (bytevector? object) #f)
 (define (error . args) args) ;;TODO
-(define ($open-tcp-server/accept port-number handler)
-  (display "opening tcp server socket") (newline) (flush-output-port)
-  (let* ((server (make-server-socket port-number))
-         (socket (socket-accept server ':inbuf #t ':outbuf #t)))
-    (handler port-number (socket-input socket) (socket-output socket))))
+(define ($open-tcp-server port-number port-file handler)
+  (let* ((n (or port-number (+ 10000 (random 50000))))
+         (server (make-server-socket n)))
+    (handler n server)))
+(define ($tcp-server-accept server handler)
+  (let ((socket (socket-accept server ':inbuf #t ':outbuf #t)))
+    (handler (socket-input socket) (socket-output socket))))
 (define ($output-to-repl thunk)
   ;; basic implementation, print all output at the end, this should
   ;; be replaced with a custom output port
@@ -59,27 +116,6 @@
 (define (make-bytevector size)
   (make-string size))
 (define exact inexact->exact)
-(define (make-parameter x)
-  (let ((val x))
-    (lambda args
-      (if (null? args) val
-          (set! val (car args))))))
-
-(define dynamic-bindings '())
-
-(define-syntax parameterize
-  (syntax-rules ()
-    ((parameterize () body0 body ...)
-     (begin body0 body ...))
-    ((parameterize ((binding form) rest ...) body0 body ...)
-     (dynamic-wind (lambda ()
-                     (set! dynamic-bindings (cons (binding) dynamic-bindings))
-                     (binding form))
-         (lambda ()
-           (parameterize (rest ...) body0 body ...))
-         (lambda ()
-           (binding (car dynamic-bindings))
-           (set! dynamic-bindings (cdr dynamic-bindings)))))))
 
 (define (bytevector-copy! to at from)
   (let ((len (string-length from)))
@@ -136,3 +172,15 @@
   (next istate-next set-istate-next!)
   (previous istate-previous)
   (content istate-content))
+
+(define (list-index predicate list)
+  (let loop ((i 0)
+             (l list))
+    (if (null? l)
+        #f
+        (if (predicate (car l))
+            i
+            (loop (+ i 1) (cdr l))))))
+;;;; HACK!
+(define (string-replace string replacement start end)
+  (string-append (substring string 0 start) (substring string end (string-length string))))

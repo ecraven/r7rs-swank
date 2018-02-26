@@ -8,10 +8,18 @@
 (define ($scheme-name)
   "chibi-scheme")
 
-(define ($open-tcp-server/accept port-number handler)
-  ;; TODO: port number
-  (run-net-server port-number (lambda (in out sock addr)
-                                (handler port-number in out))))
+;; chibi does not allow running code between opening the socket
+;; and accepting with (chibi net server) :-/
+(define ($open-tcp-server port-number port-file handler)
+  (let ((n (or port-number (+ 10000 (random-integer 50000)))))
+    ;; HACK: the port should be printed by base.scm, but as commented
+    ;; above, chibi does not let us run code there
+    (display "listening on port ") (display n) (newline) (flush-output-port)
+    (run-net-server n (lambda (in out sock addr)
+                        (handler n (list in out sock))))))
+
+(define ($tcp-server-accept lst handler)
+  (handler (car lst) (cadr lst)))
 
 (define $make-hash-table make-hash-table)
 (define $hash-table/put! hash-table-set!)
@@ -141,4 +149,11 @@
   (content istate-content))
 
 (define ($inspect-fallback object)
+  #f)
+
+(define ($apropos name)
+  "Return a list of (name type documentation) for all matches for NAME."
+  '())
+
+(define ($binding-documentation p)
   #f)

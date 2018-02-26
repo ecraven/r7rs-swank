@@ -131,12 +131,15 @@
   ;; don't support any changes
   (list "(user)" "(user)"))
 
-(define ($open-tcp-server/accept port-number handler)
-     (with-tcp-server-socket
-      port-number 1
-      (lambda (socket)
-        (let ((p (tcp-server-connection-accept socket)))
-          (handler port-number p p)))))
+(define ($open-tcp-server port-number port-file handler)
+  (let ((n (or port-number (+ 10000 (random 50000)))))
+    (with-tcp-server-socket
+     n 1
+     (lambda (socket)
+       (handler n socket)))))
+(define ($tcp-server-accept socket handler)
+  (let ((p (tcp-server-connection-accept socket)))
+    (handler p p)))
 
 (define $make-hash-table make-hash-table)
 (define $hash-table/put! hashtable-set!)
@@ -281,6 +284,26 @@
                               (loop (cdr n) (cdr v)))))))
         (else #f)))
 
+(define ($apropos name)
+  "Return a list of (name type documentation) for all matches for NAME."
+  (let ((lst (apropos-list name)))
+    (map (lambda (sym)
+           (let* ((binding (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval sym (param:environment)))))))
+                  (doc ($binding-documentation binding))
+                  (type (cond ((procedure? binding) ':function)
+                              (else ':variable))))
+             (list sym type doc)))
+         (filter symbol? lst)) ;; ignore other packages for now, only use direct symbols
+    ))
+
+(define (init-built-in-signatures)
+  (define-built-in-doc + '(+ . n)
+    "")
+  (define-built-in-doc - '(- n0 . n)
+    "")
+  (define-built-in-doc foreign-alloc '(foreign-alloc n)
+    "Allocate N bytes.")
+  )
 ;;;; srfi-13 parts
 (define (string-replace s1 s2 start1 end1) ;; . start2+end2
   (let* ((s1-len (string-length s1))
@@ -335,3 +358,4 @@
   (define-built-in-doc make-date '(make-date nsec sec min hour day mon year offset)
     "")
   )
+

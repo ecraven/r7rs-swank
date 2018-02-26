@@ -59,25 +59,32 @@
                ((port-or-file) (cond ((number? port-or-file)
                                       (server-loop port-or-file #f))
                                      ((string? port-or-file)
-                                      (server-loop 4005 port-or-file))
+                                      (server-loop #f port-or-file))
                                      (else
                                       (error "Please call with port number or filename to which the automatically chosen port number will be written."))))))
 
 (define (server-loop port-number port-file)
-  (display "swank listening on port " log-port) (display port-number log-port) (newline log-port) (flush-output-port log-port)
-  ($open-tcp-server/accept port-number
-                           (lambda (actual-port-number in out)
-                             (when port-file
-                               (when (file-exists? port-file)
-                                 (delete-file port-file))
-                               (with-output-to-file port-file
-                                 (lambda ()
-                                   (display actual-port-number))))
-                             (parameterize ((param:slime-in-port in)
-                                            (param:slime-out-port out))
-                               (let loop ()
-                                 (process-one-message)
-                                 (loop))))))
+  ($open-tcp-server
+   port-number port-file
+   (lambda (actual-port-number data)
+     (unless port-file
+       (display "swank listening on port " log-port)
+       (display actual-port-number log-port)
+       (newline log-port)
+       (flush-output-port log-port))
+     (when port-file
+         (when (file-exists? port-file)
+           (delete-file port-file))
+         (with-output-to-file port-file
+           (lambda ()
+             (display actual-port-number))))
+     ($tcp-server-accept data
+                         (lambda (in out)
+                           (parameterize ((param:slime-in-port in)
+                                          (param:slime-out-port out))
+                             (let loop ()
+                               (process-one-message)
+                               (loop))))))))
 
 (define (string-pad-left string size pad)
   (let* ((s-len (string-length string))
