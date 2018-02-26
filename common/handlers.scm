@@ -101,7 +101,8 @@
           (let ((answer (if signature (let* ((signature (highlight-at-cursor signature expr)))
                                         (with-output-to-string (lambda ()
                                                                  (write signature)
-                                                                 (if doc
+                                                                 (if (and doc
+                                                                          (not (string=? "" doc)))
                                                                      (begin
                                                                        (display " -- ")
                                                                        (display doc))))))
