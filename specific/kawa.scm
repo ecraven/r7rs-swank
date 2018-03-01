@@ -1,9 +1,12 @@
 (define ($scheme-name)
   "kawa")
-(define ($open-tcp-server/accept port-number handler)
-  (let ((s (java.net.ServerSocket port-number)))
-    (let ((connection-socket (s:accept)))
-      (handler port-number (connection-socket:getInputStream) (gnu.kawa.io.OutPort (connection-socket:getOutputStream))))))
+(define ($open-tcp-server port-number port-file handler)
+  (let* ((n (or port-number (+ 10000 (random 50000))))
+         (socket (java.net.ServerSocket port-number)))
+    (handler n socket)))
+(define ($tcp-server-accept socket handler)
+  (let ((connection-socket (socket:accept)))
+      (handler (connection-socket:getInputStream) (gnu.kawa.io.OutPort (connection-socket:getOutputStream)))))
 
 ;; kawa reads foo:bar as ($lookup$ foo (quasiquote bar)), so equal?, not eq?
 (define $make-hash-table make-hash-table)
