@@ -45,7 +45,7 @@
 
 (define-slime-handler (swank-repl:listener-eval form)
   (let* ((form (replace-readtime-lookup-presented-object-or-lose form))
-	 (results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form)))))))
+	 (results ($output-to-repl (lambda () (interactive-eval (cons 'begin (read-all (open-input-string form))))))))
     (for-each (lambda (val)
                 (if (presentations?)
                     (present val ':repl-result)
@@ -72,7 +72,7 @@
 
 (define-slime-handler (swank:compile-string-for-emacs form buffer position filename policy)
   ;; TODO: for now, just evaluate, copy of listener-eval
-  (let ((results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form)))))))
+  (let ((results ($output-to-repl (lambda () (interactive-eval (cons 'begin (read-all (open-input-string form))))))))
     (for-each (lambda (val)
 		(swank/write-string val 'repl-result))
               results)
@@ -137,7 +137,7 @@
 
 (define-slime-handler (swank:init-inspector string-form)
   (reset-inspector)
-  (let ((vals (interactive-eval (read (open-input-string string-form)))))
+  (let ((vals (interactive-eval (cons 'begin (read-all (open-input-string string-form))))))
     (inspect-object (car vals))))
 
 (define-slime-handler (swank:inspector-range from to)
@@ -227,7 +227,7 @@
   (inspect-object ($frame-var-value frame index)))
 
 (define-slime-handler (swank:interactive-eval form)
-  (let* ((results ($output-to-repl (lambda () (interactive-eval (read (open-input-string form))))))
+  (let* ((results ($output-to-repl (lambda () (interactive-eval (cons 'begin (read-all (open-input-string form)))))))
          (count (length results)))
     (cond ((= count 1)
            (string-append "=> " (display-to-string (car results))))

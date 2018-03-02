@@ -1,3 +1,11 @@
+(define (read-all port)
+  "read forms from port until eof, return a list"
+  (let loop ((result '())
+             (form (read port)))
+    (if (eof-object? form)
+        (reverse result)
+        (loop (cons form result)
+              (read port)))))
 (define (read-packet port)
   "read 6 byte ascii hex length, then length bytes, all utf-8"
   (let* ((length (string->number (utf8->string (read-bytevector 6 port)) 16))
