@@ -132,6 +132,7 @@
   (list "(user)" "(user)"))
 
 (define ($open-tcp-server port-number port-file handler)
+  (print-record #f)
   (let ((n (or port-number (+ 10000 (random 50000)))))
     (with-tcp-server-socket
      n 1
