@@ -1,5 +1,5 @@
 #lang r7rs
-(import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl) (scheme load) (scheme char)
+(import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl) (scheme load) (scheme char) (scheme cxr)
         (only (srfi 1) fold filter fold-right find list-index iota take cons*)
         (only (compatibility/mlist) mlist->list list->mlist)
         (only (srfi 13) string-prefix? string-contains string-replace)
@@ -10,4 +10,4 @@
 (include "specific/racket.ss")
 (include "common/base.scm")
 (include "common/handlers.scm")
-(start-swank "/tmp/racket-port.txt")
+(start-swank)

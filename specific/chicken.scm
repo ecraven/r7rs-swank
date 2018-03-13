@@ -1,10 +1,14 @@
 (define ($scheme-name)
   "chicken-scheme")
-(define ($open-tcp-server/accept port-number handler)
+(define ($open-tcp-server port-number port-file handler)
   (parameterize ((tcp-read-timeout #f))
-    (let ((listener (tcp-listen port-number)))
-      (let-values (((in out) (tcp-accept listener)))
-        (handler port-number in out)))))
+    (let* ((n (or port-number (+ 10000 (random 50000))))
+           (listener (tcp-listen n)))
+      (handler n listener))))
+
+(define ($tcp-server-accept listener handler)
+  (let-values (((in out) (tcp-accept listener)))
+        (handler in out)))
 
 (define $make-hash-table make-hash-table)
 
@@ -69,3 +73,7 @@
 
 (define ($handle-condition exception)
   #f)
+
+(define ($apropos name)
+  "Return a list of (name type documentation) for all matches for NAME."
+  '())

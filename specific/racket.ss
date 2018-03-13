@@ -1,10 +1,15 @@
 (import (racket/tcp) (srfi/69))
 (define ($scheme-name)
   "racket")
+(define ($open-tcp-server port-number port-file handler)
+  (let ((n (or port-number 0))
+        (server (tcp-listen port-number)))
+    (handler n server)))
+(define ($tcp-server-accept server handler)
+  (let-values (((in out) (tcp-accept server)))
+      (handler in out)))
 (define ($open-tcp-server/accept port-number handler)
-  (let ((server (tcp-listen port-number)))
-    (let-values (((in out) (tcp-accept server)))
-      (handler port-number in out))))
+)
 
 (define $make-hash-table make-hash-table)
 (define $hash-table/put! hash-table-set!)
@@ -112,3 +117,13 @@
   #f)
 
 (define $pretty-print pretty-print)
+
+(define ($binding-documentation binding)
+  #f)
+
+(define ($condition-location condition)
+  "Return (PATH POSITION LINE COLUMN) for CONDITION."
+  #f)
+
+(define ($apropos name)
+  '())

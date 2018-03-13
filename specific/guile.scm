@@ -11,11 +11,15 @@
   (match (accept server-socket)
          ((client-socket . _) client-socket)))
 
-(define ($open-tcp-server/accept port-number handler)
-  (let* ((server-socket (make-server-socket port-number))
-         (dummy (listen server-socket 1))
-         (port (accept-new-client server-socket)))
-    (handler port-number port port)))
+(define ($open-tcp-server port-number port-file handler)
+  (let* ((n (or port-number 0))
+         (server-socket (make-server-socket port-number))
+         (dummy (listen server-socket 1)))
+    (handler n server-socket)))
+
+(define ($tcp-server-accept socket handler)
+  (let ((port (accept-new-client socket)))
+    (handler port port)))
 
 (define $make-hash-table make-hash-table)
 (define $hash-table/put! hash-table-set!)
@@ -193,3 +197,7 @@
 
 (define ($binding-documentation value)
   (object-documentation value))
+
+(define ($condition-location condition)
+  "Return (PATH POSITION LINE COLUMN) for CONDITION."
+  #f)

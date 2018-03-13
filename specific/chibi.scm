@@ -120,6 +120,10 @@
 (define ($condition-trace condition)
   '())
 
+(define ($condition-location condition)
+  "Return (PATH POSITION LINE COLUMN) for CONDITION."
+  #f)
+
 (define ($frame-locals-and-catch-tags nr)
   '())
 

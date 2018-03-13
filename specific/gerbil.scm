@@ -177,3 +177,6 @@
 
 (define ($apropos name)
   '())
+
+(define ($condition-location condition)
+  #f)
