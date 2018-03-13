@@ -100,22 +100,24 @@
   (interaction-environment))
 
 (define ($condition-trace condition)
-  '())
+  (map *:toString ($condition-links condition)))
 
 (define ($frame-locals-and-catch-tags nr)
-  '())
+  'nil)
 
 (define ($frame-var-value frame index)
   #f)
 
 (define ($condition-msg condition)
-  "UNKNOWN")
+  (condition:toString))
 
 (define ($condition-links condition)
-  '())
+  (let ((st (as vector (condition:getStackTrace))))
+    (vector->list st)))
 
 (define ($handle-condition exception)
-  #f)
+  (when (instance? exception java.lang.Exception)
+    (invoke-sldb exception)))
 
 (define $pretty-print pprint)
 
