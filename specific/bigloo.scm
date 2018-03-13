@@ -181,6 +181,8 @@
         (if (predicate (car l))
             i
             (loop (+ i 1) (cdr l))))))
+(define ($condition-location condition)
+  #f)
 ;;;; HACK!
 (define (string-replace string replacement start end)
   (string-append (substring string 0 start) (substring string end (string-length string))))

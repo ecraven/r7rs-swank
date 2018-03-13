@@ -3,10 +3,14 @@
 (define (fluid a)
   (a))
 
-(define ($open-tcp-server/accept port-number handler)
-  (let ((socket (open-tcp-server-socket port-number (host-address-loopback))))
-    (let ((p (tcp-server-connection-accept socket #t #f)))
-      (handler port-number p p))))
+(define ($open-tcp-server port-number port-file handler)
+  (let* ((n (or port-number 0))
+         (socket (open-tcp-server-socket port-number (host-address-loopback))))
+    (handler n socket)))
+
+(define ($tcp-server-accept socket handler)
+  (let ((p (tcp-server-connection-accept socket #t #f)))
+    (handler p p)))
 
 (define $make-hash-table make-hash-table)
 

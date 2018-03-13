@@ -6,10 +6,16 @@
       (handler port-number (socket-input-port socket) (socket-output-port socket)))))
 
 (define $make-hash-table make-hash-table)
-
 (define $hash-table/put! hash-table-set!)
-
 (define $hash-table/get hash-table-ref/default)
+(define $hash-table/count hash-table-size)
+(define $hash-table? hash-table?)
+(define ($hash-table/clear! table)
+  ($hash-table-walk table
+                    (lambda (key value)
+                      ($hash-table/remove! table key))))
+(define $hash-table/remove! hash-table-delete!)
+(define $hash-table-walk hash-table-walk)
 
 (define ($all-package-names)
   '())
@@ -59,4 +65,34 @@
   '())
 
 (define ($handle-condition exception)
+  #f)
+
+(define-record-type <istate>
+  (make-istate object parts actions next previous content)
+  istate?
+  (object istate-object)
+  (parts istate-parts)
+  (actions istate-actions)
+  (next istate-next set-istate-next!)
+  (previous istate-previous)
+  (content istate-content))
+
+(define ($apropos name)
+  '())
+
+(define ($completions prefix env-name)
+  (cons '() prefix))
+
+(define ($condition-location condition)
+  #f)
+
+(define ($frame-var-value frame index)
+  #f)
+
+(define $pretty-print display)
+
+(define ($binding-documentation p)
+  #f)
+
+(define ($inspect-fallback object)
   #f)
