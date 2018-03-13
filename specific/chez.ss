@@ -7,6 +7,19 @@
     (newline o)
     (get-output-string o)))
 
+(define ($condition-location condition)
+  "Return (PATH POSITION LINE COLUMN) for CONDITION."
+  (call-with-values (lambda () (condition 'source-path))
+    (let ()
+      (define (p path)
+        (if (char=? #\/ (string-ref path 0))
+            path
+            (string-append (current-directory) "/" path)))
+      (case-lambda
+       (() #f)
+       ((path pos) (list (p path) pos #f #f))
+       ((path line column) (list (p path) #f line column))))))
+
 (define ($condition-trace condition)
   (define (display current)
     (let* ((code (current 'code))
@@ -47,7 +60,7 @@
 
 (define ($binding-documentation p)
   ;; same as (inspect object), then hitting c
-  
+
   (let ((o (inspect/object p)))
     (if (eq? (o 'type) 'procedure)
         (let ((s ((o 'code) 'source)))
@@ -170,21 +183,21 @@
   (%bytevector-copy! from 0 to to-index (bytevector-length from)))
 
 (define repl-port (make-custom-textual-input/output-port "swank repl port"
-            ;; read
-            (lambda (string start count)
-              0
-              )
-            ;; write
-            (lambda (string start count)
-              (swank/write-string (substring string start (+ start count)) #f)
-              count)
-            ;; getpos
-            #f
-            ;; setpos
-            #f
-            ;; close
-            (lambda ()
-              (display "Cannot close repl port\n" log-port))))
+                                                         ;; read
+                                                         (lambda (string start count)
+                                                           0
+                                                           )
+                                                         ;; write
+                                                         (lambda (string start count)
+                                                           (swank/write-string (substring string start (+ start count)) #f)
+                                                           count)
+                                                         ;; getpos
+                                                         #f
+                                                         ;; setpos
+                                                         #f
+                                                         ;; close
+                                                         (lambda ()
+                                                           (display "Cannot close repl port\n" log-port))))
 
 (define ($output-to-repl thunk)
   ;; basic implementation, print all output at the end, this should
@@ -263,7 +276,6 @@
 
 (define ($frame-var-value frame index)
   ((((list-ref (param:active-continuations) frame) 'ref index) 'ref) 'value))
-
 
 (define take list-head)
 (define drop list-tail)

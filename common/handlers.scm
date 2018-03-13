@@ -226,6 +226,25 @@
   (reset-inspector)
   (inspect-object ($frame-var-value frame index)))
 
+(define-slime-handler (swank:frame-source-location index)
+  ;; (:location
+  ;;  (:file "/usr/share/sbcl-source/src/code/numbers.lisp")
+  ;;  (:position 14095)
+  ;;  (:line line column)
+  ;;  (:snippet "(define-arith + 0\n    \"Return the sum of its arguments. With no args, returns 0.\")\n  (define-arith * 1\n    \"Return the product of its arguments. With no args, returns 1.\"))\n\n(defun - (number &rest more-numbers)\n  \"Subtract the second and all subsequent arg"))
+  (let ((loc ($condition-location (list-ref (param:active-continuations) index))))
+    (if loc
+        (let ((file (list-ref loc 0))
+              (position (list-ref loc 1))
+              (line (list-ref loc 2))
+              (column (list-ref loc 3)))
+          `(:location
+            (:file ,file)
+            ,@(if position `((:position ,position)) '())
+            ,@(if line `((:line ,line ,column)) '())
+            (:snippet "")))
+        `(:error "No location found."))))
+
 (define-slime-handler (swank:interactive-eval form)
   (let* ((results ($output-to-repl (lambda () (interactive-eval (cons 'begin (read-all (open-input-string form)))))))
          (count (length results)))
@@ -265,3 +284,4 @@
 (define-slime-handler (swank:list-threads)
   `((:id :name :status)
     (1 "repl-thread" "Running")))
+
