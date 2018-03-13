@@ -102,6 +102,12 @@
 (define ($condition-trace condition)
   (map *:toString ($condition-links condition)))
 
+(define ($condition-location stack-trace-element)
+  "Return (PATH POSITION LINE COLUMN) for CONDITION."
+  (let ((file (stack-trace-element:getFileName))
+        (line (stack-trace-element:getLineNumber)))
+    `(,file #f ,line 0)))
+
 (define ($frame-locals-and-catch-tags nr)
   'nil)
 
