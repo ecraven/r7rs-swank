@@ -285,3 +285,11 @@
   `((:id :name :status)
     (1 "repl-thread" "Running")))
 
+(define-slime-handler (swank:clear-repl-results)
+  ;; don't do anything, CL clears all presentations
+  (set! *presentations* ($make-hash-table))
+  't)
+
+(define-slime-handler (swank-repl:clear-repl-variables)
+  ;; don't do anything, CL clears *** ** * /// // / +++ ++ + here
+  'nil)
