@@ -336,3 +336,11 @@
                    (display (car lst) os)
                    (loop os (cdr lst) #t)))))
         ':not-available)))
+
+(define-slime-handler (swank:value-for-editing name)
+  (write-to-string (binding-value (string->symbol name))))
+
+(define-slime-handler (swank:commit-edited-value name value-string)
+  (let ((v (read-from-string value-string)))
+    (interactive-eval `(set! ,(string->symbol name) ',v))
+    't))

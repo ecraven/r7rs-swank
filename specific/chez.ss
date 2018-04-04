@@ -218,9 +218,6 @@
       (interaction-environment)
       (environment (read-from-string pstring))))
 
-(define (read-from-string string)
-  (read (open-input-string string)))
-
 (define (string-prefix? x y)
   (let ([n (string-length x)])
     (and (fx<= n (string-length y))
@@ -351,3 +348,4 @@
   (define-built-in-doc make-date '(make-date nsec sec min hour day mon year offset)
     "")
   )
+

@@ -182,6 +182,9 @@ The secondary value indicates the absence of an entry."
     (write val o)
     (get-output-string o)))
 
+(define (read-from-string str)
+  (read (open-input-string str)))
+
 (define (display-to-string val)
   (let ((o (open-output-string)))
     (display val o)
