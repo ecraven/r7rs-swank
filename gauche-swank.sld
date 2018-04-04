@@ -9,7 +9,7 @@
           (only (gauche net) make-server-socket socket-accept socket-input-port socket-output-port)
           (gauche pp)
           (only (srfi-13) string-contains string-prefix? string-replace)
-          (only (srfi-1) find fold list-index cons*))
+          (only (srfi-1) find fold list-index cons* filter))
 
   (include "specific/gauche.scm")
   (include "common/base.scm")

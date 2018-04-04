@@ -311,3 +311,28 @@
   (if (presentations?)
       (present *listener-value* ':repl-result)
       (swank/write-string *listener-value* 'repl-result)))
+
+(define-slime-handler (swank:complete-form expr)
+  (let* ((op-string (find-string-before-swank-cursor-marker expr))
+         (form (filter (lambda (el) (not (and (string? el) (string=? "" el)))) (find-expression-containing-swank-cursor-marker expr))))
+    (if op-string
+        (let* ((signature+doc ($function-parameters-and-documentation op-string))
+               (signature (car signature+doc))
+               (provided-param-count (- (length form) 1)))
+          (let loop ((os (open-output-string))
+                     (lst (list-tail signature provided-param-count))
+                     (space? #f))
+            (cond ((null? lst)
+                   (get-output-string os))
+                  ((symbol? lst)
+                   (when space?
+                       (display " " os))
+                   (display lst os)
+                   (display "..." os)
+                   (get-output-string os))
+                  ((list? lst)
+                   (when space?
+                     (display " " os))
+                   (display (car lst) os)
+                   (loop os (cdr lst) #t)))))
+        ':not-available)))
