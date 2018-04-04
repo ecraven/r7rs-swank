@@ -1,3 +1,5 @@
+(define *listener-value* #f)
+
 (define-syntax define-slime-handler
   (syntax-rules ()
     ((define-slime-handler (name . params) body0 body1 ...)
@@ -293,3 +295,19 @@
 (define-slime-handler (swank-repl:clear-repl-variables)
   ;; don't do anything, CL clears *** ** * /// // / +++ ++ + here
   'nil)
+
+(define-slime-handler (swank-repl:listener-save-value fun . args)
+  ;; fun is (quote ...)
+  (set! fun (cadr fun))
+  (case fun
+    ((swank:inspector-nth-part)
+     (let ((index (car args)))
+       (set! *listener-value* ($hash-table/get (istate-parts inspector-state) index 'no-such-part))
+       't))
+    (else
+     (swank/abort (string-append "Unknown swank-repl:listener-save-value function: " (symbol->string fun))))))
+
+(define-slime-handler (swank-repl:listener-get-value)
+  (if (presentations?)
+      (present *listener-value* ':repl-result)
+      (swank/write-string *listener-value* 'repl-result)))

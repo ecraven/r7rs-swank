@@ -174,7 +174,8 @@ The secondary value indicates the absence of an entry."
     (write-message `(:presentation-start ,id ,type))
     (swank/write-string (write-to-string value) type)
     (write-message `(:presentation-end ,id ,type))
-    (swank/write-string "\n" type)))
+    (swank/write-string "\n" type)
+    'nil))
 
 (define (write-to-string val)
   (let ((o (open-output-string)))
