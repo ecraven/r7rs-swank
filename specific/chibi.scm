@@ -15,6 +15,13 @@
     ;; HACK: the port should be printed by base.scm, but as commented
     ;; above, chibi does not let us run code there
     (display "listening on port ") (display n) (newline) (flush-output-port)
+    (when port-file
+         (when (file-exists? port-file)
+           (delete-file port-file))
+         (with-output-to-file port-file
+           (lambda ()
+             (display n))))
+    ;; end of HACK
     (run-net-server n (lambda (in out sock addr)
                         (handler n (list in out sock))))))
 
