@@ -1,18 +1,13 @@
 (define ($scheme-name)
   "gauche-scheme")
 (define ($open-tcp-server port-number port-file handler)
-  (let* ((n (or port-number 0))
-         (socket (make-server-socket 'inet port-number ':reuse-addr? #t)))
+  (let* ((n (or port-number (+ 10000 (random-integer 50000))))
+         (socket (make-server-socket 'inet n ':reuse-addr? #t)))
     (handler n socket)))
 
 (define ($tcp-server-accept socket handler)
   (let ((cs (socket-accept socket)))
     (handler (socket-input-port cs) (socket-output-port cs))))
-
-(define ($open-tcp-server/accept port-number handler)
-  (let* ((socket (make-server-socket 'inet port-number ':reuse-addr? #t))
-         (cs (socket-accept socket)))
-    (handler port-number (socket-input-port cs) (socket-output-port cs))))
 
 (define $make-hash-table make-hash-table)
 (define $hash-table/put! hash-table-set!)
