@@ -29,6 +29,21 @@
             (out (socket-output-port ns 'blocking 'char 'flush)))
         (handler port-number in out)))))
 
+(define ($open-tcp-server port-number port-file handler)
+  (let ((n (or port-number (+ 10000 (random 50000)))))
+    (display "$open-tcp-server/accept ") (write n) (newline) (flush-output-port)
+    (let ((s (make-server-socket n 'blocking)))
+      (display "server socket: ") (write s) (newline) (flush-output-port)
+      (handler n s))))
+
+(define ($tcp-server-accept socket handler)
+  (display "accepting on socket: ") (write socket) (newline) (flush-output-port)
+  (let-values (((ns addr) (server-socket-accept socket)))
+    (display "accepted: ") (write ns) (display " ") (write addr) (newline) (flush-output-port)
+      (let ((in (socket-input-port ns 'blocking 'char))
+            (out (socket-output-port ns 'blocking 'char 'flush)))
+        (handler in out))))
+
 (define ($output-to-repl thunk)
   ;; basic implementation, print all output at the end, this should
   ;; be replaced with a custom output port
@@ -65,6 +80,10 @@
 
 (define ($condition-links condition)
   '())
+
+(define ($condition-location condition)
+  "Return (PATH POSITION LINE COLUMN) for CONDITION."
+  #f)
 
 (define ($handle-condition exception)
   #f)

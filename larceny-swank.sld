@@ -8,7 +8,7 @@
           (only (srfi 13) string-contains string-replace string-prefix?)
           (only (larceny compiler) require)
           (primitives pretty-print r5rs:require))
-  (import (primitives server-socket-accept socket-output-port socket-input-port make-server-socket make-client-socket))
+  (import (primitives server-socket-accept socket-output-port socket-input-port make-server-socket make-client-socket random))
   (begin
     (r5rs:require 'Standard/socket))
   (include "specific/larceny.scm")
