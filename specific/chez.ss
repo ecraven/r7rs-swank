@@ -837,5 +837,7 @@
   ;;   "")
   (define-built-in-doc make-date '(make-date nsec sec min hour day mon year offset)
     "")
-  )
+
+  (define-built-in-doc sort '(sort predicate list)
+    ""))
 
