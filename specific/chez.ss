@@ -1,6 +1,12 @@
 (define ($scheme-name)
   "chez-scheme")
 
+(define ($macroexpand-1 form)
+  (expand form))
+
+(define ($macroexpand-all form)
+  (expand form))
+
 (define ($condition-msg condition)
   (let ((o (open-output-string)))
     (display-condition condition o)

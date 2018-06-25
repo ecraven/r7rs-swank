@@ -1,6 +1,13 @@
 (use-modules (srfi srfi-11))
 (define ($scheme-name)
   "guile")
+
+(define ($macroexpand-1 form)
+  (macroexpand form))
+
+(define ($macroexpand-all form)
+  (macroexpand form))
+
 (define* (make-server-socket port)
   (let ((sock (socket PF_INET SOCK_STREAM 0)))
     (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)

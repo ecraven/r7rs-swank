@@ -344,3 +344,11 @@
   (let ((v (read-from-string value-string)))
     (interactive-eval `(set! ,(string->symbol name) ',v))
     't))
+
+(define-slime-handler (swank:swank-expand-1 form)
+  (let ((v (read-from-string form)))
+    (write-to-string ($macroexpand-1 v))))
+
+(define-slime-handler (swank:swank-macroexpand-all form)
+  (let ((v (read-from-string form)))
+    (write-to-string ($macroexpand-all v))))

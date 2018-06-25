@@ -1,5 +1,11 @@
 (define ($scheme-name)
   "kawa")
+;; not sure how to express this require as an r7rs import :-/
+;; (require 'syntax-utils)
+;; (define ($macroexpand-1 form)
+;;   (expand form))
+;; (define ($macroexpand-all form)
+;;   (expand form))
 (define ($open-tcp-server port-number port-file handler)
   (let* ((n (or port-number (+ 10000 (random 50000))))
          (socket (java.net.ServerSocket port-number)))

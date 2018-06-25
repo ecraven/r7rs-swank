@@ -1,5 +1,12 @@
 (define ($scheme-name)
   "gauche-scheme")
+
+(define ($macroexpand-1 form)
+  (macroexpand-1 form))
+
+(define ($macroexpand-all form)
+  (macroexpand-all form))
+
 (define ($open-tcp-server port-number port-file handler)
   (let* ((n (or port-number (+ 10000 (random-integer 50000))))
          (socket (make-server-socket 'inet n ':reuse-addr? #t)))
