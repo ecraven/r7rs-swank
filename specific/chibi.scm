@@ -8,6 +8,11 @@
 (define ($scheme-name)
   "chibi-scheme")
 
+(define ($macroexpand-1 form)
+  (macroexpand form))
+
+(define ($macroexpand-all form)
+  (macroexpand form))
 ;; chibi does not allow running code between opening the socket
 ;; and accepting with (chibi net server) :-/
 (define ($open-tcp-server port-number port-file handler)

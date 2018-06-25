@@ -374,12 +374,12 @@
   (define-built-in-doc rational-valued? '(rational-valued? obj)
     (string-append
      "Returns #t if the object is a number object and is equal "
-     "in thesense of = to some object of the rational type, and "
+     "in the sense of = to some object of the rational type, and "
      "otherwise return #f."))
   (define-built-in-doc integer-valued? '(integer-valued? obj)
     (string-append
      "Returns #t if the object is a number object and is equal "
-     "in thesense of = to some object of the integer type, and "
+     "in the sense of = to some object of the integer type, and "
      "otherwise return #f."))
   (define-built-in-doc exact? '(exact? z)
     "Returns #t if z is exact, and #f otherwise.")
@@ -836,6 +836,14 @@
 
   (define-built-in-doc foreign-alloc '(foreign-alloc n)
     "Allocate N bytes.")
+  (define-built-in-doc foreign-free '(foreign-alloc address)
+    "Allocate N bytes.")
+  (define-built-in-doc foreign-ref '(foreign-ref type address offset)
+    "")
+  (define-built-in-doc foreign-set! '(foreign-set! type address offset value)
+    "")
+  (define-built-in-doc foreign-sizeof '(foreign-sizeof type)
+    "")
   ;; syntax...
   ;; (define-built-in-doc ftype-set! '(ftype-set! ftype-name (a ...) fptr-expr [index] val-expr)
   ;;   "")
