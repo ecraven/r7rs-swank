@@ -81,11 +81,11 @@
        (newline log-port)
        (flush-output-port log-port))
      (when port-file
-         (when (file-exists? port-file)
-           (delete-file port-file))
-         (with-output-to-file port-file
-           (lambda ()
-             (display actual-port-number))))
+       (when (file-exists? port-file)
+         (delete-file port-file))
+       (with-output-to-file port-file
+         (lambda ()
+           (display actual-port-number))))
      ($tcp-server-accept data
                          (lambda (in out)
                            (parameterize ((param:slime-in-port in)
@@ -376,10 +376,10 @@ The secondary value indicates the absence of an entry."
         ((char? object)        (inspect-char object))
         ((integer? object)     (inspect-integer object))
         ((pair? object)        (inspect-pair object))
+        (($hash-table? object) (inspect-hash-table object))
         ((vector? object)      (inspect-vector object))
         ((bytevector? object)  (inspect-bytevector object))
         ((string? object)      (inspect-string object))
-        (($hash-table? object) (inspect-hash-table object))
         (else
          (inspect-unknown object))))
 
@@ -440,8 +440,8 @@ The secondary value indicates the absence of an entry."
 (define (inspect-hash-table object)
   (let ((elements '()))
     ($hash-table-walk object
-                          (lambda (key value)
-                            (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () ($hash-table/remove! object key))) '(newline) elements))))
+                      (lambda (key value)
+                        (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () ($hash-table/remove! object key))) '(newline) elements))))
     (stream-cons (inspector-line "Length" ($hash-table/count object))
                  (stream-cons `(action "[clear hash table]" ,(lambda () ($hash-table/clear! object)))
                               (stream-cons '(newline)
