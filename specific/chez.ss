@@ -114,16 +114,16 @@
         #f)))
 
 (define (built-in-signature value)
-  (let ((q (get-hash-table *built-in-signatures* value #f)))
+  (let ((q (hash-table-ref/default *built-in-signatures* value #f)))
     (if q (car q) #f)))
 (define (built-in-documentation value)
-  (let ((q (get-hash-table *built-in-signatures* value #f)))
+  (let ((q (hash-table-ref/default *built-in-signatures* value #f)))
     (if q (cdr q) #f)))
 
 (define *built-in-signatures* (make-hash-table))
 
 (define (define-built-in-doc value signature documentation)
-  (put-hash-table! *built-in-signatures* value (cons signature documentation)))
+  (hash-table-set! *built-in-signatures* value (cons signature documentation)))
 
 (define ($function-parameters-and-documentation name)
   (when (zero? ($hash-table/count *built-in-signatures*))
@@ -162,13 +162,16 @@
     (handler p p)))
 
 (define $make-hash-table make-hash-table)
-(define $hash-table/put! hashtable-set!)
-(define $hash-table/get hashtable-ref)
-(define $hash-table/count hashtable-size)
+(define $hash-table/put! hash-table-set!)
+(define $hash-table/get hash-table-ref/default)
+(define $hash-table/count hash-table-size)
 (define $hash-table? hash-table?)
-(define $hash-table-walk hash-table-for-each)
-(define $hash-table/clear! hashtable-clear!)
-(define $hash-table/remove! hashtable-delete!)
+(define $hash-table-walk hash-table-walk)
+(define ($hash-table/clear! table)
+  ($hash-table-walk table
+                    (lambda (key value)
+                      ($hash-table/remove! table key))))
+(define $hash-table/remove! hash-table-delete!)
 
 (define (read-bytevector size port)
   (get-bytevector-n port size))
