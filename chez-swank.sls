@@ -3,6 +3,7 @@
           swank:get-last-exception
           swank:lookup-presented-object-or-lose
           swank:lookup-presented-object
+          make-swank-image
           inspect-in-emacs)
   (import (socket net)
           (srfi :69)
@@ -11,7 +12,8 @@
                         (load %load)
                         (error %error)
                         (with-output-to-string %with-output-to-string))
-                  string-ci-hash make-hash-table hash-table? string-hash))
+                  string-ci-hash make-hash-table hash-table? string-hash define-record-type)
+          (only (scheme base) define-record-type bytevector-append))
   (include "specific/chez.ss")
   (include "common/base.scm")
   (include "common/handlers.scm")
