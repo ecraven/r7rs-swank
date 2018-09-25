@@ -4,7 +4,9 @@
           swank:lookup-presented-object-or-lose
           swank:lookup-presented-object
           make-swank-image
-          inspect-in-emacs)
+          swank-register-image-converter
+          inspect-in-emacs
+          swank-present)
   (import (socket net)
           (srfi :69)
           (except (rename (chezscheme)

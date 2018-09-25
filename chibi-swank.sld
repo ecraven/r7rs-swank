@@ -3,7 +3,9 @@
           swank:lookup-presented-object-or-lose
           swank:lookup-presented-object
           inspect-in-emacs
-          make-swank-image)
+          make-swank-image
+          swank-register-image-converter
+          swank-present)
   (import (scheme base) (scheme eval) (scheme read) (scheme write)
           (scheme file) (scheme case-lambda) (scheme process-context) (scheme cxr)
           (chibi process) (chibi) (chibi string) (srfi 39) (srfi 1)
