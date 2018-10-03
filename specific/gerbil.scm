@@ -180,3 +180,9 @@
 
 (define ($condition-location condition)
   #f)
+
+(define ($macroexpand-1 form)
+  form)
+
+(define ($macroexpand-all form)
+  form)
