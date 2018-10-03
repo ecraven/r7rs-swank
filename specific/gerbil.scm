@@ -45,7 +45,7 @@
 
 (define ($open-tcp-server port-number port-file handler)
   (let ((n (or port-number (+ 10000 (random-integer 40000)))))
-    (let* ((p (open-tcp-server port-number)))
+    (let* ((p (open-tcp-server n)))
       (handler n p))))
 
 (define ($tcp-server-accept p handler)
