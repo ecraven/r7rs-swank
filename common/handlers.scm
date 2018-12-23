@@ -352,3 +352,6 @@
 (define-slime-handler (swank:swank-macroexpand-all form)
   (let ((v (read-from-string form)))
     (write-to-string ($macroexpand-all v))))
+
+(define-slime-handler (swank:inspect-current-condition)
+  (inspect-object (param:active-condition)))

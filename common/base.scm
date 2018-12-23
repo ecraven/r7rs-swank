@@ -331,7 +331,7 @@ The secondary value indicates the absence of an entry."
   (let ((msg ($condition-msg exception))
         (trace ($condition-trace exception))
         (links ($condition-links exception)))
-    (write-message `(:debug 1 1 (,msg "FOO" nil)
+    (write-message `(:debug 1 1 (,msg ,(write-to-string exception) nil)
                             (("ABORT" "abort"))
                             (,@(map (lambda (c t i)
                                       `(,i ,t))
