@@ -1,4 +1,3 @@
-(import (racket/tcp) (srfi/69))
 (define ($scheme-name)
   "racket")
 (define ($macroexpand-1 form)
@@ -12,8 +11,6 @@
 (define ($tcp-server-accept server handler)
   (let-values (((in out) (tcp-accept server)))
       (handler in out)))
-(define ($open-tcp-server/accept port-number handler)
-)
 
 (define $make-hash-table make-hash-table)
 (define $hash-table/put! hash-table-set!)
