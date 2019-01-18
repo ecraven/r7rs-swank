@@ -10,7 +10,7 @@
                 keyword? keyword->string module-name all-modules module-table module-imports module-precedence-list ref <procedure> class-of
                 macroexpand-1 macroexpand-all)
           (only (gauche net) make-server-socket socket-accept socket-input-port socket-output-port)
-          (gauche pp)
+          (gauche pputil)
           (only (srfi-13) string-contains string-prefix? string-replace)
           (only (srfi-1) find fold list-index cons* filter))
 
