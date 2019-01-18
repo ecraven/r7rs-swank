@@ -6,7 +6,7 @@
   (##sys#expand form))
 (define ($open-tcp-server port-number port-file handler)
   (parameterize ((tcp-read-timeout #f))
-    (let* ((n (or port-number (+ 10000 (random 50000))))
+    (let* ((n (or port-number (+ 10000 (pseudo-random-integer 50000))))
            (listener (tcp-listen n)))
       (handler n listener))))
 

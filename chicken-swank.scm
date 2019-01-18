@@ -4,6 +4,7 @@
         (chicken random)
         (chicken syntax)
         (chicken tcp)
+        (chicken random)
         (srfi-1)
         (srfi-13)
         (srfi-69))
