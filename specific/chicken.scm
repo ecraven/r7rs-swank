@@ -99,3 +99,6 @@
 (define ($apropos name)
   "Return a list of (name type documentation) for all matches for NAME."
   '())
+
+(define ($inspect-fallback object)
+  #f)
