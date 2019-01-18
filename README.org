@@ -1,8 +1,71 @@
 * Swankish, a SLIME swank for Schemes
-** TODO [/]
+** Schemes
+   Support for various Schemes varies in quality. Not everything works on every Scheme.
+   
+   See each Schemes entry for how to configure it in your Emacs configuration.
+*** Chibi Scheme
+#+BEGIN_SRC elisp
+(defun chibi-scheme-start-swank (file encoding)
+  (format "%S\n\n" `(start-swank ,file)))
+(setq slime-lisp-implementations
+      (cons '(chibi-scheme ("chibi-scheme" "-A/path/to/r7rs-swank" "-m" "(chibi-swank)")
+                           :init chibi-scheme-start-swank)
+            slime-lisp-implementations))
+#+END_SRC
+*** Gerbil Scheme
+#+BEGIN_SRC elisp
+(defun gerbil-scheme-start-swank (file encoding)
+  (format "%S\n\n" `(begin (import (ecraven gerbil-swank)) (start-swank ,file))))
+(setq slime-lisp-implementations
+      (cons '(gerbil-scheme ("gxi" "-:d-" "--lang" "r7rs")
+                            :init gerbil-scheme-start-swank
+                            :env "GERBIL_LOADPATH=/path/to/r7rs-swank/")
+            slime-lisp-implementations))
+#+END_SRC
+*** Chez Scheme
+You'll also need https://github.com/ecraven/chez-scheme-libraries.
+#+BEGIN_SRC elisp
+    (defun chez-scheme-start-swank (file encoding)
+      (format "%S\n\n" `(begin (import (chez-swank)) (start-swank ,file))))
+    (setq slime-lisp-implementations
+          (cons '(chez-scheme ("chez-scheme" "--libdirs" "/path/to/r7rs-swank:/path/to/chez/libs")
+                              :init chez-scheme-start-swank)
+                slime-lisp-implementations))
+#+END_SRC
+*** Gauche
+#+BEGIN_SRC elisp
+    (defun gauche-scheme-start-swank (file encoding)
+      (format "%S\n\n" `(begin (import (gauche-swank)) (start-swank ,file))))
+    (setq slime-lisp-implementations
+          (cons '(gauche-scheme ("gosh" "-r7" "-A/path/to/r7rs-swank" "-l" "gauche-swank.sld")
+                                :init gauche-scheme-start-swank
+                                :env "GAUCHE_KEYWORD_IS_SYMBOL=T")
+                slime-lisp-implementations))
+#+END_SRC
+*** Chicken Scheme
+#+BEGIN_SRC elisp
+    (defun chicken-scheme-start-swank (file encoding)
+      (format "%S\n\n" `(begin (load "chicken-swank") (start-swank ,file))))
+    (setq slime-lisp-implementations
+          (cons '(chicken-scheme ("csi" "-R" "r7rs")
+                                 :init chicken-scheme-start-swank
+                                 :directory "/path/to/r7rs-swank/")
+                slime-lisp-implementations))
+#+END_SRC
+*** Kawa
+#+BEGIN_SRC elisp                
+    (defun kawa-start-swank (file encoding)
+      (format "%S\n\n" `(begin (import (kawa-swank)) (start-swank ,file))))
+    (setq slime-lisp-implementations
+          (cons '(kawa ("kawa" "-f" "kawa-swank.sld" "-e" "(eval (read) (interaction-environment))")
+                       :init kawa-start-swank
+                       :directory "/path/to/r7rs-swank/")
+                slime-lisp-implementations))
+#+END_SRC
+** TODO [3/6]
 - [ ] proper information about the current Scheme
-- [ ] redirect output to Slime
-- [ ] inspector
+- [X] redirect output to Slime
+- [X] inspector
 - [ ] debugger
 - [ ] tracing
-- [ ] image support
+- [X] image support
