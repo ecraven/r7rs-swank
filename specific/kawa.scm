@@ -11,11 +11,13 @@
 
 (define (random n)
   ((java.util.concurrent.ThreadLocalRandom:current):nextInt 0 (+ n 1)))
+
 (define ($open-tcp-server port-number port-file handler)
   (display port-number) (newline)
   (let* ((n (or port-number (+ 10000 (random 50000))))
          (socket (java.net.ServerSocket n)))
     (handler n socket)))
+
 (define ($tcp-server-accept socket handler)
   (let ((connection-socket (socket:accept)))
       (handler (connection-socket:getInputStream) (gnu.kawa.io.OutPort (connection-socket:getOutputStream)))))
@@ -34,6 +36,7 @@
         (let ((current :: gnu.mapping.NamedLocation (enum:nextElement)))
           (loop enum (cons (current:getKeySymbol) result)))
         (reverse result))))
+
 (define ($output-to-repl thunk)
   ;; basic implementation, print all output at the end, this should
   ;; be replaced with a custom output port
@@ -42,6 +45,7 @@
       (let-values ((x (thunk)))
         (swank/write-string (get-output-string o) #f)
         (apply values x)))))
+
 (define (string-match-forward a b)
   (let* ((a-len (string-length a))
          (b-len (string-length b))
@@ -52,15 +56,18 @@
           (if (string=? (substring a 0 i) (substring b 0 i))
               (loop (+ i 1))
               (- i 1))))))
+
 (define (longest-common-prefix strings)
   (if (null? strings)
       ""
       (fold (lambda (s1 s2) (substring s2 0 (string-match-forward s1 s2))) (car strings) (cdr strings))))
+
 (define (env-name->environment env-name)
   (cond ((string=? env-name "(user)")
          (interaction-environment))
         (else
          (error "not implemented yet"))))
+
 (define (find-java-matches prefix env-name)
   (if (prefix:contains ":")
       (let* ((parts (prefix:split ":"))
@@ -84,6 +91,7 @@
                           (filter-relevant (map *:getName fields)))))
               '())))
       '()))
+
 (define ($completions prefix env-name)
   (let* ((matches (filter (lambda (el :: java.lang.String) (el:startsWith prefix))
                           (map symbol->string (environment-bindings (env-name->environment env-name)))))
@@ -155,7 +163,9 @@
 
 (define ($binding-documentation value)
   "")
+
 (define ($macroexpand-1 form)
   form)
+
 (define ($macroexpand-all form)
   form)

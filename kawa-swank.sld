@@ -1,5 +1,5 @@
 (define-library (kawa-swank)
-  (export start-swank)
+  (export start-swank inspect-in-emacs)
   (import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl) (scheme load) (scheme char) (scheme cxr)
           (srfi :69) (srfi :1) (only (srfi :13) string-contains-ci string-contains string-replace)
           (kawa pprint)
