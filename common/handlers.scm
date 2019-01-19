@@ -354,3 +354,9 @@
 
 (define-slime-handler (swank:inspect-current-condition)
   (inspect-object (param:active-condition)))
+
+(define-slime-handler (swank::menu-choices-for-presentation-id id)
+  'nil)
+
+(define-slime-handler (swank::describe-to-string object)
+  (object-documentation (write-to-string object) (interactive-eval object)))

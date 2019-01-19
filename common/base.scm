@@ -523,13 +523,17 @@ The secondary value indicates the absence of an entry."
 (define (binding-value symbol)
   (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval symbol (param:environment)))))))
 
-(define (describe-symbol name)
-  (let* ((value (binding-value (string->symbol name)))
-         (doc ($binding-documentation value)))
+(define (object-documentation name object)
+  (let ((doc ($binding-documentation object)))
     (string-append name "\n"
                    (if doc doc "")
                    "\n"
-                   "It is bound to:\n" (write-to-string value))))
+                   "It is bound to:\n" (write-to-string object))))
+
+(define (describe-symbol name)
+  (let* ((value (binding-value (string->symbol name))))
+    (object-documentation name value)))
+
 ;;;; streams
 (define-syntax swank/delay
   (syntax-rules ()
