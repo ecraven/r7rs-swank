@@ -12,18 +12,6 @@
   (let-values (((in out) (tcp-accept server)))
       (handler in out)))
 
-(define $make-hash-table make-hash-table)
-(define $hash-table/put! hash-table-set!)
-(define $hash-table/get hash-table-ref/default)
-(define $hash-table/count hash-table-size)
-(define $hash-table? hash-table?)
-(define ($hash-table/clear! table)
-  ($hash-table-walk table
-                    (lambda (key value)
-                      ($hash-table/remove! table key))))
-(define $hash-table/remove! hash-table-delete!)
-(define $hash-table-walk hash-table-walk)
-
 (define env (let ((n (make-base-namespace)))
               (parameterize ((current-namespace n))
                 (namespace-require 'r7rs)

@@ -52,17 +52,12 @@
   (let ((c (read p)))
       (handler c c)))
 
-(define $make-hash-table make-hash-table)
-(define $hash-table/put! hash-put!)
-(define $hash-table/get hash-ref)
-(define $hash-table/count hash-length)
-(define $hash-table? hash-table?)
-(define ($hash-table-walk table fun) (hash-for-each fun table))
-(define ($hash-table/clear! table)
-  ($hash-table-walk table
-                    (lambda (key value)
-                      ($hash-table/remove! table key))))
-(define $hash-table/remove! hash-remove!)
+(define hash-table-set! hash-put!)
+(define hash-table-ref/default hash-ref)
+(define hash-table-size hash-length)
+(define hash-table? hash-table?)
+(define (hash-table-walk table fun) (hash-for-each fun table))
+(define hash-table-delete! hash-remove!)
 
 ;; TODO remove when let-values works correctly
 (define-syntax let-values

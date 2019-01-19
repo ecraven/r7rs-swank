@@ -5,18 +5,6 @@
     (let ((socket (socket-accept server)))
       (handler port-number (socket-input-port socket) (socket-output-port socket)))))
 
-(define $make-hash-table make-hash-table)
-(define $hash-table/put! hash-table-set!)
-(define $hash-table/get hash-table-ref/default)
-(define $hash-table/count hash-table-size)
-(define $hash-table? hash-table?)
-(define ($hash-table/clear! table)
-  ($hash-table-walk table
-                    (lambda (key value)
-                      ($hash-table/remove! table key))))
-(define $hash-table/remove! hash-table-delete!)
-(define $hash-table-walk hash-table-walk)
-
 (define ($all-package-names)
   '())
 

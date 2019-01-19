@@ -6,6 +6,9 @@
 ;;   (expand form))
 ;; (define ($macroexpand-all form)
 ;;   (expand form))
+
+;; kawa reads foo:bar as ($lookup$ foo (quasiquote bar)), this leads to many problems :-/
+
 (define (random n)
   ((java.util.concurrent.ThreadLocalRandom:current):nextInt 0 (+ n 1)))
 (define ($open-tcp-server port-number port-file handler)
@@ -16,16 +19,6 @@
 (define ($tcp-server-accept socket handler)
   (let ((connection-socket (socket:accept)))
       (handler (connection-socket:getInputStream) (gnu.kawa.io.OutPort (connection-socket:getOutputStream)))))
-
-;; kawa reads foo:bar as ($lookup$ foo (quasiquote bar)), so equal?, not eq?
-(define $make-hash-table make-hash-table)
-(define $hash-table/put! hash-table-set!)
-(define $hash-table/get hash-table-ref/default)
-(define $hash-table/count hash-table-size)
-(define $hash-table/clear! hashtable-clear!)
-(define $hash-table/remove! hash-table-delete!)
-(define $hash-table? hash-table?)
-(define $hash-table-walk hash-table-walk)
 
 (define ($error-description error)
   (error:toString))

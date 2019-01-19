@@ -148,10 +148,10 @@
                            from to))
 
 (define-slime-handler (swank:inspect-nth-part index)
-  (inspect-object ($hash-table/get (istate-parts inspector-state) index 'no-such-part)))
+  (inspect-object (hash-table-ref/default (istate-parts inspector-state) index 'no-such-part)))
 
 (define-slime-handler (swank:inspector-call-nth-action index)
-  (($hash-table/get (istate-actions inspector-state) index (lambda () #f)))
+  ((hash-table-ref/default (istate-actions inspector-state) index (lambda () #f)))
   (inspect-object (istate-object inspector-state)))
 
 (define-slime-handler (swank:inspector-pop)
@@ -210,7 +210,7 @@
 (define-slime-handler (swank:pprint-inspector-part index)
   (with-output-to-string
     (lambda ()
-      ($pretty-print ($hash-table/get (istate-parts inspector-state) index 'no-such-part)))))
+      ($pretty-print (hash-table-ref/default (istate-parts inspector-state) index 'no-such-part)))))
 
 ;; inspector, M-RET
 ;; (define-slime-handler (swank:listener-save-value type index)
@@ -221,7 +221,7 @@
 (define-slime-handler (swank:inspect-presentation id reset?)
   (when reset?
     (reset-inspector))
-  (inspect-object ($hash-table/get *presentations* (unquote-number id) #f)))
+  (inspect-object (hash-table-ref/default *presentations* (unquote-number id) #f)))
 
 (define-slime-handler (swank:inspect-frame-var frame index)
   (reset-inspector)
@@ -288,7 +288,7 @@
 
 (define-slime-handler (swank:clear-repl-results)
   ;; don't do anything, CL clears all presentations
-  (set! *presentations* ($make-hash-table))
+  (set! *presentations* (make-hash-table))
   't)
 
 (define-slime-handler (swank-repl:clear-repl-variables)
@@ -301,7 +301,7 @@
   (case fun
     ((swank:inspector-nth-part)
      (let ((index (car args)))
-       (set! *listener-value* ($hash-table/get (istate-parts inspector-state) index 'no-such-part))
+       (set! *listener-value* (hash-table-ref/default (istate-parts inspector-state) index 'no-such-part))
        't))
     (else
      (swank/abort (string-append "Unknown swank-repl:listener-save-value function: " (symbol->string fun))))))

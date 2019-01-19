@@ -1,5 +1,12 @@
+(define (hash-table-clear! table)
+  "Remove all entries from TABLE."
+  (hash-table-walk table
+                        (lambda (key value)
+                          (hash-table-delete! table key))))
+
+
 (define (read-all port)
-  "read forms from port until eof, return a list"
+  "Read forms from port until eof, return a list"
   (let loop ((result '())
              (form (read port)))
     (if (eof-object? form)
@@ -7,7 +14,7 @@
         (loop (cons form result)
               (read port)))))
 (define (read-packet port)
-  "read 6 byte ascii hex length, then length bytes, all utf-8"
+  "Read 6 byte ascii hex length, then length bytes, all utf-8"
   (let* ((length (string->number (utf8->string (read-bytevector 6 port)) 16))
          (result (make-bytevector length)))
     (let loop ((result-index 0)
@@ -112,21 +119,21 @@
     (write-string str port)
     (flush-output-port port)))
 
-(define *handlers* ($make-hash-table))
+(define *handlers* (make-hash-table))
 
 (define (register-slime-handler! name function)
   ;; kawa returns non-equal for symbols with :, so we force the registered ones through READ as well
   (let ((name (read (open-input-string (symbol->string name)))))
-    ($hash-table/put! *handlers* name function)))
+    (hash-table-set! *handlers* name function)))
 
 (define (find-handler name)
-  ($hash-table/get *handlers* name #f))
+  (hash-table-ref/default *handlers* name #f))
 
 (define (interactive-eval sexp)
   (let-values ((vals (eval sexp (param:environment)))) ;; TODO environment
     vals))
 
-(define *presentations* ($make-hash-table))
+(define *presentations* (make-hash-table))
 
 (define (swank:lookup-presented-object id)
   "Retrieve the object corresponding to ID.
@@ -135,7 +142,7 @@ The secondary value indicates the absence of an entry."
   (if (list? id)
       (swank:lookup-presented-object (cadr id))
       (let* ((nope (list #f))
-             (val ($hash-table/get
+             (val (hash-table-ref/default
                    *presentations*
                    ;; emacs seems to ask for a number with a decimal,
                    ;; aka inexact
@@ -201,7 +208,7 @@ The secondary value indicates the absence of an entry."
 (define (present value type)
   (or (swank-convert-to-image value type)
       (let ((id (next-presentation-id)))
-        ($hash-table/put! *presentations* id value)
+        (hash-table-set! *presentations* id value)
         (write-message `(:presentation-start ,id ,type))
         (swank/write-string (write-to-string value) type)
         (write-message `(:presentation-end ,id ,type))
@@ -358,8 +365,8 @@ The secondary value indicates the absence of an entry."
 (define (inspect-object object)
   (let ((previous inspector-state)
         (content (swank/inspect object))
-        (parts ($make-hash-table))
-        (actions ($make-hash-table)))
+        (parts (make-hash-table))
+        (actions (make-hash-table)))
     (set! inspector-state (make-istate object parts actions #f previous content))
     (if previous (set-istate-next! previous inspector-state))
     (istate->elisp inspector-state)))
@@ -379,13 +386,13 @@ The secondary value indicates the absence of an entry."
                                               100)))
 
 (define (assign-istate-index object parts)
-  (let ((i ($hash-table/count parts)))
-    ($hash-table/put! parts i object)
+  (let ((i (hash-table-size parts)))
+    (hash-table-set! parts i object)
     i))
 
 (define (assign-istate-action-index fun actions)
-  (let ((i ($hash-table/count actions)))
-    ($hash-table/put! actions i fun)
+  (let ((i (hash-table-size actions)))
+    (hash-table-set! actions i fun)
     i))
 
 (define (prepare-inspector-range parts actions content from to)
@@ -424,7 +431,7 @@ The secondary value indicates the absence of an entry."
         ((char? object)        (inspect-char object))
         ((integer? object)     (inspect-integer object))
         ((pair? object)        (inspect-pair object))
-        (($hash-table? object) (inspect-hash-table object))
+        ((hash-table? object)  (inspect-hash-table object))
         ((vector? object)      (inspect-vector object))
         ((bytevector? object)  (inspect-bytevector object))
         ((string? object)      (inspect-string object))
@@ -487,11 +494,11 @@ The secondary value indicates the absence of an entry."
 
 (define (inspect-hash-table object)
   (let ((elements '()))
-    ($hash-table-walk object
+    (hash-table-walk object
                       (lambda (key value)
-                        (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () ($hash-table/remove! object key))) '(newline) elements))))
-    (stream-cons (inspector-line "Length" ($hash-table/count object))
-                 (stream-cons `(action "[clear hash table]" ,(lambda () ($hash-table/clear! object)))
+                        (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () (hash-table-delete! object key))) '(newline) elements))))
+    (stream-cons (inspector-line "Length" (hash-table-size object))
+                 (stream-cons `(action "[clear hash table]" ,(lambda () (hash-table-clear! object)))
                               (stream-cons '(newline)
                                            (apply stream elements))))))
 

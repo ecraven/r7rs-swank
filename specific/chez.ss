@@ -126,7 +126,7 @@
   (hash-table-set! *built-in-signatures* value (cons signature documentation)))
 
 (define ($function-parameters-and-documentation name)
-  (when (zero? ($hash-table/count *built-in-signatures*))
+  (when (zero? (hash-table-size *built-in-signatures*))
     (init-built-in-signatures))
   (let* ((binding (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval (string->symbol name) (param:environment)))))))
          (param-list (if binding (procedure-parameter-list binding) #f))
@@ -160,18 +160,6 @@
 (define ($tcp-server-accept socket handler)
   (let ((p (tcp-server-connection-accept socket)))
     (handler p p)))
-
-(define $make-hash-table make-hash-table)
-(define $hash-table/put! hash-table-set!)
-(define $hash-table/get hash-table-ref/default)
-(define $hash-table/count hash-table-size)
-(define $hash-table? hash-table?)
-(define $hash-table-walk hash-table-walk)
-(define ($hash-table/clear! table)
-  ($hash-table-walk table
-                    (lambda (key value)
-                      ($hash-table/remove! table key))))
-(define $hash-table/remove! hash-table-delete!)
 
 (define (read-bytevector size port)
   (get-bytevector-n port size))

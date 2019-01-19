@@ -12,11 +12,9 @@
   (let ((p (tcp-server-connection-accept socket #t #f)))
     (handler p p)))
 
-(define $make-hash-table make-hash-table)
+(define hash-table-set! hash-table/put!)
 
-(define $hash-table/put! hash-table/put!)
-
-(define $hash-table/get hash-table/get)
+(define hash-table-ref/default hash-table/get)
 
 (define ($all-package-names)
   (map (lambda (package) (env->pstring (package/environment package)))

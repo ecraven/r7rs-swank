@@ -67,17 +67,14 @@
     ((let-values ((vals form)) body0 body ...)
      (receive vals form
        (begin body0 body ...)))))
-(define $make-hash-table make-hashtable)
-(define $hash-table/put! hashtable-put!)
-(define ($hash-table/get table key default) (hashtable-get table key)) ; ignore default
-(define $hash-table/count hashtable-size)
-(define ($hash-table/clear! table)
-  ($hash-table-walk table
-                    (lambda (key value)
-                      ($hash-table/remove! table key))))
-(define $hash-table/remove! hashtable-remove!)
-(define $hash-table-walk hashtable-for-each)
-(define $hash-table? hashtable?)
+(define make-hash-table make-hashtable)
+(define hash-table-set! hashtable-put!)
+(define (hash-table-ref/default table key default) (hashtable-get table key)) ; ignore default
+(define hash-table-size hashtable-size)
+(define hash-table-delete! hashtable-remove!)
+(define hash-table-walk hashtable-for-each)
+(define hash-table? hashtable?)
+
 (define ($error-description error)
   error)
 (define ($environment name)
