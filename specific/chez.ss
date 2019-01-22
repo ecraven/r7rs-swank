@@ -164,8 +164,8 @@
 (define (read-bytevector size port)
   (get-bytevector-n port size))
 
-(define (write-string str port)
-  (put-bytevector port (string->utf8 str)))
+(define (write-bytevector bv port)
+  (put-bytevector port bv))
 
 (define ($error-description error)
   (let ((o (open-output-string)))

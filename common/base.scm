@@ -115,8 +115,8 @@
     (when (> (string-length hex-len) 6)
       (error "Expression length exceeds 24 bits" hex-len))
     (display "to slime< " log-port) (write str log-port) (newline log-port)
-    (write-string (string-pad-left hex-len 6 #\0) port)
-    (write-string str port)
+    (write-bytevector (string->utf8 (string-pad-left hex-len 6 #\0)) port)
+    (write-bytevector bv port)
     (flush-output-port port)))
 
 (define *handlers* (make-hash-table))
