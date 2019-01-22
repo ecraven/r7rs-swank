@@ -223,9 +223,25 @@
                            (else (pp-to-string o)))))
                  count
                  blines))))
-
+(define (procedure-parameters symbol env)
+  (let ((type (environment-reference-type env symbol)))
+    (let ((ans (if (eq? type 'normal)
+                   (let ((binding (environment-lookup env symbol)))
+                     (if (and binding
+                              (procedure? binding))
+                         (cons symbol (read-from-string (string-trim (with-output-to-string
+                                                                       (lambda () (pa binding))))))
+                         #f))
+                   #f)))
+      ans)))
+(define ($binding-documentation p)
+  ;; same as (inspect object), then hitting c
+  #f)
 (define ($function-parameters-and-documentation name)
-  (cons '(+ a b) "documentation"))
+  ;; TODO
+  (let ((binding #f))
+    (cons (procedure-parameters (string->symbol name) ($environment param:environment))
+          ($binding-documentation binding))))
 
 (define (string-replace s1 s2 start1 end1) ;; . start2+end2
   (let* ((s1-before (substring s1 0 start1))
