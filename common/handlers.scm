@@ -25,7 +25,7 @@
          :features (:swank)
          :modules ("SWANK-ARGLISTS" "SWANK-REPL" "SWANK-PRESENTATIONS")
          :package (:name "(user)" :prompt "(user)")
-         :version "2.23"))
+         :version "2.24"))
 
 (define-slime-handler (swank:swank-require packages)
   '())
