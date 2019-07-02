@@ -1,3 +1,15 @@
+(define debug? #f)
+
+(define (debug-log . rest)
+  (when debug?
+    (for-each (lambda (r)
+                (if (string? r)
+                    (display r log-port)
+                    (write r log-port)))
+              rest)
+    (newline log-port)
+    (flush-output-port log-port)))
+
 (define (hash-table-clear! table)
   "Remove all entries from TABLE."
   (hash-table-walk table
@@ -21,7 +33,7 @@
                (to-read length))
       (if (zero? to-read)
           (let ((res (utf8->string result)))
-            (display "from slime> " log-port) (write res log-port) (newline log-port) (flush-output-port log-port)
+            (debug-log "from slime> " res)
             (message->scheme res))
           (let* ((tmp (read-bytevector to-read port))
                  (len (bytevector-length tmp)))
@@ -83,10 +95,7 @@
    port-number port-file
    (lambda (actual-port-number data)
      (unless port-file
-       (display "swank listening on port " log-port)
-       (display actual-port-number log-port)
-       (newline log-port)
-       (flush-output-port log-port))
+       (debug-log "swank listening on port " actual-port-number))
      (when port-file
        (when (file-exists? port-file)
          (delete-file port-file))
@@ -114,7 +123,7 @@
          (hex-len (number->string len 16)))
     (when (> (string-length hex-len) 6)
       (error "Expression length exceeds 24 bits" hex-len))
-    (display "to slime< " log-port) (write str log-port) (newline log-port)
+    (debug-log "to slime< " str)
     (write-bytevector (string->utf8 (string-pad-left hex-len 6 #\0)) port)
     (write-bytevector bv port)
     (flush-output-port port)))
