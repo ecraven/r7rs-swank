@@ -9,6 +9,7 @@
                 keyword? keyword->string module-name all-modules module-table module-imports module-precedence-list ref <procedure> class-of
                 hash-table-for-each
                 macroexpand-1 macroexpand-all)
+          (rename (scheme base) (symbol->string scheme:symbol->string))
           (only (gauche net) make-server-socket socket-accept socket-input-port socket-output-port)
           (gauche pputil)
           (only (srfi-13) string-contains string-prefix? string-replace)
