@@ -1,4 +1,485 @@
-(load-option 'srfi-13)
+(declare (usual-integrations))
+;;;; srfi 13
+(define (string-start+end str start end)
+  (let ((s (if (eq? #!default start)
+               0 start))
+        (e (if (eq? #!default end)
+               (string-length str) end)))
+    (values s e)))
+
+(define (string-start+end+start+end s1 start1 end1 s2 start2 end2)
+  (let ((s (if (eq? #!default start1)
+               0 start1))
+        (e (if (eq? #!default end1)
+               (string-length s1) end1))
+        (sx (if (eq? #!default start2)
+               0 start2))
+        (ex (if (eq? #!default end2)
+               (string-length s2) end2)))
+    (values s e sx ex)))
+
+(define (string-map proc s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+  (let* ((len (- end start))
+         (ans (make-string len)))
+    (do ((i (- end 1) (- i 1))
+         (j (- len 1) (- j 1)))
+        ((< j 0))
+      (string-set! ans j (proc (string-ref s i))))
+    ans)))
+
+(define (string-map! proc s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (do ((i (- end 1) (- i 1)))
+        ((< i start))
+      (string-set! s i (proc (string-ref s i))))))
+
+(define (string-fold kons knil s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (let lp ((v knil) (i start))
+      (if (< i end) (lp (kons (string-ref s i) v) (+ i 1))
+          v))))
+
+(define (string-fold-right kons knil s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (let lp ((v knil) (i (- end 1)))
+      (if (>= i start) (lp (kons (string-ref s i) v) (- i 1))
+          v))))
+
+(define (string-tabulate proc len)
+  (let ((s (make-string len)))
+    (do ((i (- len 1) (- i 1)))
+        ((< i 0))
+      (string-set! s i (proc i)))
+    s))
+
+(define (string-for-each proc s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (let lp ((i start))
+      (if (< i end)
+          (begin (proc (string-ref s i))
+                 (lp (+ i 1)))))))
+
+(define (string-for-each-index proc s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (let lp ((i start))
+      (if (< i end) (begin (proc i) (lp (+ i 1)))))))
+
+
+
+
+;;(define string-hash-ci string-ci-hash)
+(define string= string=?)
+(define string< string<?)
+(define string> string>?)
+(define string<= string<=?)
+(define string>= string>=?)
+(define (string<> a b) (not (string= a b)))
+
+(define string-ci= string-ci=?)
+(define string-ci< string-ci<?)
+(define string-ci> string-ci>?)
+(define string-ci<= string-ci<=?)
+(define string-ci>= string-ci>=?)
+(define (string-ci<> a b) (not (string-ci= a b)))
+
+(define (substring/shared s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (if (and (zero? start) (= end (string-length s))) s
+        (substring s start end))))
+
+(define (string-take s n)
+  (substring/shared s 0 n))
+
+(define (string-take-right s n)
+  (let ((len (string-length s)))
+    (substring/shared s (- len n) len)))
+
+(define (string-drop s n)
+  (let ((len (string-length s)))
+    (substring/shared s n len)))
+
+(define (string-drop-right s n)
+  (let ((len (string-length s)))
+    (substring/shared s 0 (- len n))))
+
+(define (string-pad s n #!optional char start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (let ((char (if (eq? #!default char) #\space char)))
+      (let ((len (- end start)))
+        (if (<= n len)
+            (substring/shared s (- end n) end)
+            (let ((ans (make-string n char)))
+              (string-copy! ans (- n len) s start end)
+              ans))))))
+
+(define (string-copy! to tstart from #!optional fstart fend)
+  (receive (fstart fend)
+      (string-start+end from fstart fend)
+    (if (> fstart tstart)
+        (do ((i fstart (+ i 1))
+             (j tstart (+ j 1)))
+            ((>= i fend))
+          (string-set! to j (string-ref from i)))
+        (do ((i (- fend 1)                    (- i 1))
+             (j (+ -1 tstart (- fend fstart)) (- j 1)))
+            ((< i fstart))
+          (string-set! to j (string-ref from i))))))
+
+(define (string-skip str criterion #!optional start end)
+  (receive (start end)
+      (string-start+end str start end)
+    (cond ((char? criterion)
+           (let lp ((i start))
+             (and (< i end)
+                  (if (char=? criterion (string-ref str i))
+                      (lp (+ i 1))
+                      i))))
+          ((char-set? criterion)
+           (let lp ((i start))
+             (and (< i end)
+                  (if (char-in-set? (string-ref str i) criterion)
+                      (lp (+ i 1))
+                      i))))
+          ((procedure? criterion)
+           (let lp ((i start))
+             (and (< i end)
+                  (if (criterion (string-ref str i)) (lp (+ i 1))
+                      i))))
+          (else (error "Second param is neither char-set, char, or predicate procedure."
+                       string-skip criterion)))))
+
+(define (string-skip-right str criterion #!optional start end)
+  (receive (start end)
+      (string-start+end str start end)
+    (cond ((char? criterion)
+           (let lp ((i (- end 1)))
+             (and (>= i start)
+                  (if (char=? criterion (string-ref str i))
+                      (lp (- i 1))
+                      i))))
+          ((char-set? criterion)
+           (let lp ((i (- end 1)))
+             (and (>= i start)
+                  (if (char-in-set? (string-ref str i) criterion)
+                      (lp (- i 1))
+                      i))))
+          ((procedure? criterion)
+           (let lp ((i (- end 1)))
+             (and (>= i start)
+                  (if (criterion (string-ref str i)) (lp (- i 1))
+                      i))))
+          (else (error "CRITERION param is neither char-set or char."
+                       string-skip-right criterion)))))
+
+(define (string-trim-both s #!optional criterion start end)
+    (receive (start end)
+        (string-start+end s start end)
+      (let ((criterion (if (eq? #!default criterion) char-set:whitespace criterion)))
+        (cond ((string-skip s criterion start end) =>
+               (lambda (i)
+                 (substring/shared s i (+ 1 (string-skip-right s criterion i end)))))
+              (else "")))))
+
+
+(define (string-filter criterion s #!optional start end)
+    (receive (start end)
+        (string-start+end s start end)
+    (if (procedure? criterion)
+        (let* ((slen (- end start))
+               (temp (make-string slen))
+               (ans-len (string-fold (lambda (c i)
+                                       (if (criterion c)
+                                           (begin (string-set! temp i c)
+                                                  (+ i 1))
+                                           i))
+                                     0 s start end)))
+          (if (= ans-len slen) temp (substring temp 0 ans-len)))
+
+        (let* ((cset (cond ((char-set? criterion) criterion)
+                           ((char? criterion) (char-set criterion))
+                           (else (error "string-delete criterion not predicate, char or char-set" criterion))))
+
+               (len (string-fold (lambda (c i) (if (char-in-set? c cset)
+                                                   (+ i 1)
+                                                   i))
+                                 0 s start end))
+               (ans (make-string len)))
+          (string-fold (lambda (c i) (if (char-in-set? c cset)
+                                         (begin (string-set! ans i c)
+                                                (+ i 1))
+                                         i))
+                       0 s start end)
+          ans))))
+
+(define (string-count s criterion #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (cond ((char? criterion)
+           (do ((i start (+ i 1))
+                (count 0 (if (char=? criterion (string-ref s i))
+                             (+ count 1)
+                             count)))
+               ((>= i end) count)))
+
+          ((char-set? criterion)
+           (do ((i start (+ i 1))
+                (count 0 (if (char-in-set? (string-ref s i) criterion)
+                             (+ count 1)
+                             count)))
+               ((>= i end) count)))
+
+          ((procedure? criterion)
+           (do ((i start (+ i 1))
+                (count 0 (if (criterion (string-ref s i)) (+ count 1) count)))
+               ((>= i end) count)))
+
+          (else (error "CRITERION param is neither char-set or char."
+                       string-count criterion)))))
+
+(define (reverse-list->string clist)
+  (let* ((len (length clist))
+         (s (make-string len)))
+    (do ((i (- len 1) (- i 1))   (clist clist (cdr clist)))
+        ((not (pair? clist)))
+      (string-set! s i (car clist)))
+    s))
+
+(define (string-index str criterion #!optional start end)
+    (receive (start end)
+      (string-start+end str start end)
+    (cond ((char? criterion)
+           (let lp ((i start))
+             (and (< i end)
+                  (if (char=? criterion (string-ref str i)) i
+                      (lp (+ i 1))))))
+          ((char-set? criterion)
+           (let lp ((i start))
+             (and (< i end)
+                  (if (char-in-set? (string-ref str i) criterion) i
+                      (lp (+ i 1))))))
+          ((procedure? criterion)
+           (let lp ((i start))
+             (and (< i end)
+                  (if (criterion (string-ref str i)) i
+                      (lp (+ i 1))))))
+          (else (error "Second param is neither char-set, char, or predicate procedure."
+                       string-index criterion)))))
+
+(define (string-index-right str criterion #!optional start end)
+    (receive (start end)
+      (string-start+end str start end)
+    (cond ((char? criterion)
+           (let lp ((i (- end 1)))
+             (and (>= i start)
+                  (if (char=? criterion (string-ref str i)) i
+                      (lp (- i 1))))))
+          ((char-set? criterion)
+           (let lp ((i (- end 1)))
+             (and (>= i start)
+                  (if (char-in-set? (string-ref str i) criterion) i
+                      (lp (- i 1))))))
+          ((procedure? criterion)
+           (let lp ((i (- end 1)))
+             (and (>= i start)
+                  (if (criterion (string-ref str i)) i
+                      (lp (- i 1))))))
+          (else (error "Second param is neither char-set, char, or predicate procedure."
+                       string-index-right criterion)))))
+
+(define (string-concatenate strings)
+  (let* ((total (do ((strings strings (cdr strings))
+                     (i 0 (+ i (string-length (car strings)))))
+                    ((not (pair? strings)) i)))
+         (ans (make-string total)))
+    (let lp ((i 0) (strings strings))
+      (if (pair? strings)
+          (let* ((s (car strings))
+                 (slen (string-length s)))
+            (string-copy! ans i s 0 slen)
+            (lp (+ i slen) (cdr strings)))))
+    ans))
+
+(define (string-concatenate-reverse string-list #!optional final end)
+  (let* ((final (if (string? final) final ""))
+         (end (if (and (integer? end)
+                       (exact? end)
+                       (<= 0 end (string-length final)))
+                  end
+                  (string-length final))))
+    (let ((len (let lp ((sum 0) (lis string-list))
+                 (if (pair? lis)
+                     (lp (+ sum (string-length (car lis))) (cdr lis))
+                     sum))))
+
+      (%finish-string-concatenate-reverse len string-list final end))))
+
+(define (%finish-string-concatenate-reverse len string-list final end)
+  (let ((ans (make-string (+ end len))))
+    (string-copy! ans len final 0 end)
+    (let lp ((i len) (lis string-list))
+      (if (pair? lis)
+          (let* ((s   (car lis))
+                 (lis (cdr lis))
+                 (slen (string-length s))
+                 (i (- i slen)))
+            (string-copy! ans i s 0 slen)
+            (lp i lis))))
+    ans))
+
+(define char-set:graphic-no-whitespace
+  (char-set-difference char-set:graphic char-set:whitespace))
+
+(define (string-tokenize s #!optional token-chars start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (let ((token-chars (if (char-set? token-chars) token-chars char-set:graphic-no-whitespace)))
+      (let lp ((i end) (ans '()))
+        (cond ((and (< start i) (string-index-right s token-chars start i)) =>
+               (lambda (tend-1)
+                 (let ((tend (+ 1 tend-1)))
+                   (cond ((string-skip-right s token-chars start tend-1) =>
+                          (lambda (tstart-1)
+                            (lp tstart-1
+                                (cons (substring s (+ 1 tstart-1) tend)
+                                      ans))))
+                         (else (cons (substring s start tend) ans))))))
+              (else ans))))))
+
+(define (string-contains text pattern #!optional start1 end1 start2 end2)
+  (receive (t-start t-end p-start p-end)
+      (string-start+end+start+end text start1 end1 pattern start2 end2)
+    (%kmp-search pattern text char=? p-start p-end t-start t-end)))
+
+(define (string-contains-ci text pattern #!optional start1 end1 start2 end2)
+    (receive (t-start t-end p-start p-end)
+      (string-start+end+start+end text start1 end1 pattern start2 end2)
+    (%kmp-search pattern text char-ci=? p-start p-end t-start t-end)))
+
+(define (%kmp-search pattern text c= p-start p-end t-start t-end)
+  (let ((plen (- p-end p-start))
+	(rv (make-kmp-restart-vector pattern c= p-start p-end)))
+
+    ;; The search loop. TJ & PJ are redundant state.
+    (let lp ((ti t-start) (pi 0)
+	     (tj (- t-end t-start)) ; (- tlen ti) -- how many chars left.
+	     (pj plen))		 ; (- plen pi) -- how many chars left.
+
+      (if (= pi plen)
+	  (- ti plen)			; Win.
+	  (and (<= pj tj)		; Lose.
+	       (if (c= (string-ref text ti) ; Search.
+		       (string-ref pattern (+ p-start pi)))
+		   (lp (+ 1 ti) (+ 1 pi) (- tj 1) (- pj 1)) ; Advance.
+		   (let ((pi (vector-ref rv pi))) ; Retreat.
+		     (if (= pi -1)
+			 (lp (+ ti 1) 0  (- tj 1) plen) ; Punt.
+			 (lp ti       pi tj       (- plen pi))))))))))
+
+(define (make-kmp-restart-vector pattern #!optional c= start end)
+  (receive (start end)
+      (string-start+end pattern start end)
+    (let ((c= (if (procedure? c=) c= char=?)))
+    (let* ((rvlen (- end start))
+	   (rv (make-vector rvlen -1)))
+      (if (> rvlen 0)
+	  (let ((rvlen-1 (- rvlen 1))
+		(c0 (string-ref pattern start)))
+
+	    ;; Here's the main loop. We have set rv[0] ... rv[i].
+	    ;; K = I + START -- it is the corresponding index into PATTERN.
+	    (let lp1 ((i 0) (j -1) (k start))
+	      (if (< i rvlen-1)
+		  ;; lp2 invariant:
+		  ;;   pat[(k-j) .. k-1] matches pat[start .. start+j-1]
+		  ;;   or j = -1.
+		  (let lp2 ((j j))
+		    (cond ((= j -1)
+			   (let ((i1 (+ 1 i)))
+			     (if (not (c= (string-ref pattern (+ k 1)) c0))
+				 (vector-set! rv i1 0))
+			     (lp1 i1 0 (+ k 1))))
+			  ;; pat[(k-j) .. k] matches pat[start..start+j].
+			  ((c= (string-ref pattern k) (string-ref pattern (+ j start)))
+			   (let* ((i1 (+ 1 i))
+				  (j1 (+ 1 j)))
+			     (vector-set! rv i1 j1)
+			     (lp1 i1 j1 (+ k 1))))
+
+			  (else (lp2 (vector-ref rv j)))))))))
+      rv))))
+
+(define (string-xreplace s1 s2 start1 end1 #!optional start2 end2)
+  (receive (start2 end2)
+      (string-start+end s2 start2 end2)
+    (let* ((slen1 (string-length s1))
+	   (sublen2 (- end2 start2))
+	   (alen (+ (- slen1 (- end1 start1)) sublen2))
+	   (ans (make-string alen)))
+      (%string-copy! ans 0 s1 0 start1)
+      (%string-copy! ans start1 s2 start2 end2)
+      (%string-copy! ans (+ start1 sublen2) s1 end1 slen1)
+      ans)))
+
+(define (%string-copy! to tstart from fstart fend)
+  (if (> fstart tstart)
+      (do ((i fstart (+ i 1))
+	   (j tstart (+ j 1)))
+	  ((>= i fend))
+	(string-set! to j (string-ref from i)))
+
+      (do ((i (- fend 1)                    (- i 1))
+	   (j (+ -1 tstart (- fend fstart)) (- j 1)))
+	  ((< i fstart))
+	(string-set! to j (string-ref from i)))))
+
+(define (string-delete criterion s #!optional start end)
+  (receive (start end)
+      (string-start+end s start end)
+    (if (procedure? criterion)
+	(let* ((slen (- end start))
+	       (temp (make-string slen))
+	       (ans-len (string-fold (lambda (c i)
+				       (if (criterion c) i
+					   (begin (string-set! temp i c)
+						  (+ i 1))))
+				     0 s start end)))
+	  (if (= ans-len slen) temp (substring temp 0 ans-len)))
+
+	(let* ((cset (cond ((char-set? criterion) criterion)
+			   ((char? criterion) (char-set criterion))
+			   (else (error "string-delete criterion not predicate, char or char-set" criterion))))
+	       (len (string-fold (lambda (c i) (if (char-in-set? c cset)
+					      i
+					      (+ i 1)))
+				 0 s start end))
+	       (ans (make-string len)))
+	  (string-fold (lambda (c i) (if (char-in-set? c cset)
+				    i
+				    (begin (string-set! ans i c)
+					   (+ i 1))))
+		       0 s start end)
+	  ans))))
+;; added
+(define (string-subst str from to)
+  (let ((from-len (string-length from))
+        (to-len (string-length to)))
+    (let loop ((str str)
+               (start 0))
+      (let ((pos (string-contains str from start)))
+        (if (not pos) str
+            (loop (string-xreplace str to pos (+ pos from-len))
+                  (+ pos to-len)))))))
+
+;;;; end of srfi-13
 ;; still no proper multiple values :-/
 (define-syntax let-values
   (syntax-rules ()
