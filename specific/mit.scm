@@ -504,8 +504,8 @@
   (a))
 
 (define ($open-tcp-server port-number port-file handler)
-  (let* ((n (or port-number 0))
-         (socket (open-tcp-server-socket port-number (host-address-loopback))))
+  (let* ((n (or port-number (+ 10000 (random-integer 50000)))) ;; TODO: pass 0, then somehow read the actual port from the socket
+         (socket (open-tcp-server-socket n (host-address-loopback))))
     (handler n socket)))
 
 (define ($tcp-server-accept socket handler)
