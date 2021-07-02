@@ -546,7 +546,7 @@ The secondary value indicates the absence of an entry."
 ;;;; streams
 (define-syntax swank/delay
   (syntax-rules ()
-    ((delay expr)
+    ((swank/delay expr)
      (lambda () expr))))
 
 (define (swank/force promise) (promise))
