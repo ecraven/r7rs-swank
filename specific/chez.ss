@@ -458,8 +458,7 @@
      "all be nonzero."))
   (define-built-in-doc abs '(abs x)
     "Returns the absolute value of its argument.")
-  ;; Skipped documentation for div-and-mod, div, mod, div0-and-mod0,
-  ;; div0, mod0.
+  ;; TODO: add div-and-mod, div, mod, div0-and-mod0, div0, mod0.
   (define-built-in-doc div-and-mod '(div-and-mod x1 x2)
     "")
   (define-built-in-doc div '(div x1 x2)
@@ -535,7 +534,7 @@
     "")
   (define-built-in-doc angle '(angle z)
     "")
-  ; Numerical Input and Output
+  ;; Numerical Input and Output
   (define-built-in-doc number->string '(number->string z [radix [precision]])
     "")
   (define-built-in-doc string->number '(string->number string [radix])
@@ -550,29 +549,6 @@
     "Returns #t if the booleans are the same.")
 
   ;; Pair and list
-  (define-built-in-doc pair? '(pair? obj)
-    "Returns #t if obj is a pair, and otherwise returns #f.")
-  (define-built-in-doc cons '(cons obj1 obj2)
-    (string-append
-     "Returns a newly allocated pair whose car is obj1 and whose "
-     "cdr is obj2. The pair is guaranteed to be different (in the "
-     "sense of eqv?) from every existing object."))
-  (define-built-in-doc car '(car pair)
-    "Returns the contents of the car field of pair.")
-  (define-built-in-doc cdr '(cdr pair)
-    "Returns the contents of the cdr field of pair.")
-  ;; Skipping caar, cadr, ..., cdddar, cddddr, total of 28.
-  (define-built-in-doc null? '(null? obj)
-    "Returns #t if obj is the empty list, #f otherwise.")
-  (define-built-in-doc list? '(list? obj)
-    (string-append
-     "Returns #t if obj is a list, #f otherwise. By definition, "
-     "all lists are chains of pairs that have finite length and are"
-     "terminated by the empty list."))
-  (define-built-in-doc list '(list obj ...)
-    "Returns a newly allocated list of its arguments.")
-  (define-built-in-doc length '(length list)
-    "Returns the length of list.")
   (define-built-in-doc append '(append list ... obj)
     (string-append
      "Returns a possibly improper list consisting of the elements "
@@ -581,19 +557,83 @@
      "results if obj is not a list.\n\n"
      "If append constructs a nonempty chain of pairs, it is always "
      "newly allocated. If no pairs are allocated, obj is returned."))
-  (define-built-in-doc reverse '(reverse list)
+  (define-built-in-doc assoc '(assoc obj alist)
     (string-append
-     "Returns a newly allocated list consisting of the elements of "
-     "list in reverse order."))
+     "Returns the first element of alist whose car is equivalent to "
+     "obj, or #f. The equivalence test is equal?."))
+  (define-built-in-doc assp '(assp procedure list)
+    (string-append
+     "Returns the first element of alist for whose car procedure "
+     "returns true, or #f."))
+  (define-built-in-doc assq '(assq obj alist)
+    (string-append
+     "Returns the first element of alist whose car is equivalent to "
+     "obj, or #f. The equivalence test is eq?."))
+  (define-built-in-doc assv '(assv obj alist)
+    (string-append
+     "Returns the first element of alist whose car is equivalent to "
+     "obj, or #f. The equivalence test is eqv?."))
+  (define-built-in-doc car '(car pair)
+    "Returns the contents of the car field of pair.")
+  (define-built-in-doc cdr '(cdr pair)
+    "Returns the contents of the cdr field of pair.")
+  ;; TODO: add caar, cadr, ..., cdddar, cddddr, total of 28.
+  (define-built-in-doc cons '(cons obj1 obj2)
+    (string-append
+     "Returns a newly allocated pair whose car is obj1 and whose "
+     "cdr is obj2. The pair is guaranteed to be different (in the "
+     "sense of eqv?) from every existing object."))
+  (define-built-in-doc cons* '(cons* obj ... final-obj)
+    (string-append
+     "Returns a list of obj ... terminated by final-obj. "
+     "If the objects obj ... are omitted, the result is "
+     "simply final-obj. Otherwise, a list of obj ... is "
+     "constructed, as with list, except that the final cdr "
+     "field is final-obj instead of (). If final-obj is not "
+     "a list, the result is an improper list."))
+  (define-built-in-doc filter '(filter procedure list)
+    (string-append
+     "Returns a list of the elements of list for which procedure "
+     "returns true."))
+  (define-built-in-doc find '(find procedure list)
+    (string-append
+     "Returns the first element of list for which procedure returns "
+     "true, or #f."))
+  (define-built-in-doc for-each '(for-each proc list1 list2 ...)
+    (string-append
+     "Applies proc element-wise to the elements of the lists "
+     "for its side effects, in order from the first elements "
+     "to the last. Proc is always called in the same dynamic "
+     "environment as for-each itself. The return values of "
+     "for-each are unspecified.\n\n"
+     "The lists should all have the same length. Proc should "
+     "accept as many arguments as there are lists. Proc should "
+     "not mutate any of the lists."))
+  (define-built-in-doc length '(length list)
+    "Returns the length of list.")
+  (define-built-in-doc list '(list obj ...)
+    "Returns a newly allocated list of its arguments.")
+  (define-built-in-doc list? '(list? obj)
+    (string-append
+     "Returns #t if obj is a list, #f otherwise. By definition, "
+     "all lists are chains of pairs that have finite length and are"
+     "terminated by the empty list."))
+  (define-built-in-doc list-ref '(list-ref list k)
+    (string-append
+     "Returns the k th element of list. List must be a list whose "
+     "length is at least k + 1."))
+  (define-built-in-doc list-sort '(list-sort predicate list)
+    (string-append
+     "Returns a list containing the elements of list sorted according "
+     "to predicate.\n\n"
+     "predicate should be a procedure that expects two arguments and "
+     "returns #t if its first argument must precede its second in "
+     "the sorted list."))
   (define-built-in-doc list-tail '(list-tail list k)
     (string-append
      "Returns the subchain of pairs of list obtained by omitting "
      "the first k elements. List should be a list of size at "
      "least k."))
-  (define-built-in-doc list-ref '(list-ref list k)
-    (string-append
-     "Returns the k th element of list. List must be a list whose "
-     "length is at least k + 1."))
   (define-built-in-doc map '(map proc list1 list2 ...)
     (string-append
      "Applies proc element-wise to the elements of the lists and "
@@ -605,16 +645,60 @@
      "The lists should all have the same length. Proc should "
      "accept as many arguments as there are lists and return a "
      "single value. Proc should not mutate any of the lists."))
-  (define-built-in-doc for-each '(for-each proc list1 list2 ...)
+  (define-built-in-doc member '(member obj list)
     (string-append
-     "Applies proc element-wise to the elements of the lists "
-     "for its side effects, in order from the first elements "
-     "to the last. Proc is always called in the same dynamic "
-     "environment as for-each itself. The return values of "
-     "for-each are unspecified.\n\n"
-     "The lists should all have the same length. Proc should "
-     "accept as many arguments as there are lists. Proc should "
-     "not mutate any of the lists."))
+     "Returns the first tail of list whose car is equivalent to obj, "
+     "or #f. The equivalence test is equal?."))
+  (define-built-in-doc memp '(memp procedure list)
+    (string-append
+     "Returns the first tail of list for whose car procedure returns "
+     "true, or #f."))
+  (define-built-in-doc memq '(memq obj list)
+    (string-append
+     "Returns the first tail of list whose car is equivalent to obj, "
+     "or #f. The equivalence test is eq?."))
+  (define-built-in-doc memv '(memv obj list)
+    (string-append
+     "Returns the first tail of list whose car is equivalent to obj, "
+     "or #f. The equivalence test is eqv?."))
+  (define-built-in-doc null? '(null? obj)
+    "Returns #t if obj is the empty list, #f otherwise.")
+  (define-built-in-doc pair? '(pair? obj)
+    "Returns #t if obj is a pair, and otherwise returns #f.")
+  (define-built-in-doc partition '(partition procedure list)
+    (string-append
+     "procedure should accept one argument and return a single value. "
+     "It should not modify list.\n\n"
+     "partition applies procedure to each element of list and returns "
+     "two values: a new list containing only the elements for which "
+     "procedure returns true, and a new list containing only the "
+     "elements for which procedure returns #f. The elements of the "
+     "returned lists appear in the same order as they appeared in "
+     "the original list."))
+  (define-built-in-doc remove '(remove obj list)
+    (string-append
+     "Returns a list containing the elements of list with all "
+     "occurrences of obj removed. The equivalence test is equal?."))
+  (define-built-in-doc remp '(remp procedure list)
+    (string-append
+     "Returns a list of the elements of list for which procedure "
+     "returns #f."))
+  (define-built-in-doc remq '(remq obj list)
+    (string-append
+     "Returns a list containing the elements of list with all "
+     "occurrences of obj removed. The equivalence test is eq?."))
+  (define-built-in-doc remv '(remv obj list)
+    (string-append
+     "Returns a list containing the elements of list with all "
+     "occurrences of obj removed. The equivalence test is eqv?."))
+  (define-built-in-doc reverse '(reverse list)
+    (string-append
+     "Returns a newly allocated list consisting of the elements of "
+     "list in reverse order."))
+  (define-built-in-doc set-car! '(set-car! pair obj)
+    "Changes the car of pair to obj. Returns unspecified.")
+  (define-built-in-doc set-cdr! '(set-cdr! pair obj)
+    "Changes the cdr of pair to obj. Returns unspecified.")
 
   ;; Symbol
   (define-built-in-doc symbol? '(symbol? obj)
