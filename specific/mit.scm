@@ -13,21 +13,21 @@
         (e (if (eq? #!default end1)
                (string-length s1) end1))
         (sx (if (eq? #!default start2)
-               0 start2))
+                0 start2))
         (ex (if (eq? #!default end2)
-               (string-length s2) end2)))
+                (string-length s2) end2)))
     (values s e sx ex)))
 
 (define (string-map proc s #!optional start end)
   (receive (start end)
       (string-start+end s start end)
-  (let* ((len (- end start))
-         (ans (make-string len)))
-    (do ((i (- end 1) (- i 1))
-         (j (- len 1) (- j 1)))
-        ((< j 0))
-      (string-set! ans j (proc (string-ref s i))))
-    ans)))
+    (let* ((len (- end start))
+           (ans (make-string len)))
+      (do ((i (- end 1) (- i 1))
+           (j (- len 1) (- j 1)))
+          ((< j 0))
+        (string-set! ans j (proc (string-ref s i))))
+      ans)))
 
 (define (string-map! proc s #!optional start end)
   (receive (start end)
@@ -181,18 +181,18 @@
                        string-skip-right criterion)))))
 
 (define (string-trim-both s #!optional criterion start end)
-    (receive (start end)
-        (string-start+end s start end)
-      (let ((criterion (if (eq? #!default criterion) char-set:whitespace criterion)))
-        (cond ((string-skip s criterion start end) =>
-               (lambda (i)
-                 (substring/shared s i (+ 1 (string-skip-right s criterion i end)))))
-              (else "")))))
+  (receive (start end)
+      (string-start+end s start end)
+    (let ((criterion (if (eq? #!default criterion) char-set:whitespace criterion)))
+      (cond ((string-skip s criterion start end) =>
+             (lambda (i)
+               (substring/shared s i (+ 1 (string-skip-right s criterion i end)))))
+            (else "")))))
 
 
 (define (string-filter criterion s #!optional start end)
-    (receive (start end)
-        (string-start+end s start end)
+  (receive (start end)
+      (string-start+end s start end)
     (if (procedure? criterion)
         (let* ((slen (- end start))
                (temp (make-string slen))
@@ -254,7 +254,7 @@
     s))
 
 (define (string-index str criterion #!optional start end)
-    (receive (start end)
+  (receive (start end)
       (string-start+end str start end)
     (cond ((char? criterion)
            (let lp ((i start))
@@ -275,7 +275,7 @@
                        string-index criterion)))))
 
 (define (string-index-right str criterion #!optional start end)
-    (receive (start end)
+  (receive (start end)
       (string-start+end str start end)
     (cond ((char? criterion)
            (let lp ((i (- end 1)))
@@ -360,7 +360,7 @@
     (%kmp-search pattern text char=? p-start p-end t-start t-end)))
 
 (define (string-contains-ci text pattern #!optional start1 end1 start2 end2)
-    (receive (t-start t-end p-start p-end)
+  (receive (t-start t-end p-start p-end)
       (string-start+end+start+end text start1 end1 pattern start2 end2)
     (%kmp-search pattern text char-ci=? p-start p-end t-start t-end)))
 
@@ -388,34 +388,34 @@
   (receive (start end)
       (string-start+end pattern start end)
     (let ((c= (if (procedure? c=) c= char=?)))
-    (let* ((rvlen (- end start))
-	   (rv (make-vector rvlen -1)))
-      (if (> rvlen 0)
-	  (let ((rvlen-1 (- rvlen 1))
-		(c0 (string-ref pattern start)))
+      (let* ((rvlen (- end start))
+	     (rv (make-vector rvlen -1)))
+        (if (> rvlen 0)
+	    (let ((rvlen-1 (- rvlen 1))
+		  (c0 (string-ref pattern start)))
 
-	    ;; Here's the main loop. We have set rv[0] ... rv[i].
-	    ;; K = I + START -- it is the corresponding index into PATTERN.
-	    (let lp1 ((i 0) (j -1) (k start))
-	      (if (< i rvlen-1)
-		  ;; lp2 invariant:
-		  ;;   pat[(k-j) .. k-1] matches pat[start .. start+j-1]
-		  ;;   or j = -1.
-		  (let lp2 ((j j))
-		    (cond ((= j -1)
-			   (let ((i1 (+ 1 i)))
-			     (if (not (c= (string-ref pattern (+ k 1)) c0))
-				 (vector-set! rv i1 0))
-			     (lp1 i1 0 (+ k 1))))
-			  ;; pat[(k-j) .. k] matches pat[start..start+j].
-			  ((c= (string-ref pattern k) (string-ref pattern (+ j start)))
-			   (let* ((i1 (+ 1 i))
-				  (j1 (+ 1 j)))
-			     (vector-set! rv i1 j1)
-			     (lp1 i1 j1 (+ k 1))))
+	      ;; Here's the main loop. We have set rv[0] ... rv[i].
+	      ;; K = I + START -- it is the corresponding index into PATTERN.
+	      (let lp1 ((i 0) (j -1) (k start))
+	        (if (< i rvlen-1)
+		    ;; lp2 invariant:
+		    ;;   pat[(k-j) .. k-1] matches pat[start .. start+j-1]
+		    ;;   or j = -1.
+		    (let lp2 ((j j))
+		      (cond ((= j -1)
+			     (let ((i1 (+ 1 i)))
+			       (if (not (c= (string-ref pattern (+ k 1)) c0))
+				   (vector-set! rv i1 0))
+			       (lp1 i1 0 (+ k 1))))
+			    ;; pat[(k-j) .. k] matches pat[start..start+j].
+			    ((c= (string-ref pattern k) (string-ref pattern (+ j start)))
+			     (let* ((i1 (+ 1 i))
+				    (j1 (+ 1 j)))
+			       (vector-set! rv i1 j1)
+			       (lp1 i1 j1 (+ k 1))))
 
-			  (else (lp2 (vector-ref rv j)))))))))
-      rv))))
+			    (else (lp2 (vector-ref rv j)))))))))
+        rv))))
 
 (define (string-xreplace s1 s2 start1 end1 #!optional start2 end2)
   (receive (start2 end2)
@@ -458,14 +458,14 @@
 			   ((char? criterion) (char-set criterion))
 			   (else (error "string-delete criterion not predicate, char or char-set" criterion))))
 	       (len (string-fold (lambda (c i) (if (char-in-set? c cset)
-					      i
-					      (+ i 1)))
+					           i
+					           (+ i 1)))
 				 0 s start end))
 	       (ans (make-string len)))
 	  (string-fold (lambda (c i) (if (char-in-set? c cset)
-				    i
-				    (begin (string-set! ans i c)
-					   (+ i 1))))
+				         i
+				         (begin (string-set! ans i c)
+					        (+ i 1))))
 		       0 s start end)
 	  ans))))
 ;; added
@@ -547,17 +547,17 @@
       (stack-frame/debugging-info frame)
     (make-subproblem frame expression environment subexpression number)))
 (define-record-type <subproblem>
-    (make-subproblem stack-frame expression environment subexpression number)
-    subproblem?
+  (make-subproblem stack-frame expression environment subexpression number)
+  subproblem?
   (stack-frame subproblem/stack-frame)
   (expression subproblem/expression)
   (environment subproblem/environment)
   (subexpression subproblem/subexpression)
   (number subproblem/number))
 (define-record-type <browser-line>
-    (%make-bline start-mark object type parent depth next prev offset
-		 properties)
-    bline?
+  (%make-bline start-mark object type parent depth next prev offset
+	       properties)
+  bline?
 
   ;; Index of this bline within browser lines vector.  #F if line is
   ;; invisible.
@@ -606,8 +606,8 @@
 	(set-bline/next! prev bline))
     bline))
 (define-record-type <reduction>
-    (make-reduction subproblem expression environment number)
-    reduction?
+  (make-reduction subproblem expression environment number)
+  reduction?
   (subproblem reduction/subproblem)
   (expression reduction/expression)
   (environment reduction/environment)
@@ -683,10 +683,10 @@
 			 prev
 			 n))
 		  ((or ;; (and limit (>= n limit))
-		       (if (system-frame? frame)
-			   (begin (set! beyond-system-code #t) #t)
-			   #f)
-		       beyond-system-code)
+		    (if (system-frame? frame)
+			(begin (set! beyond-system-code #t) #t)
+			#f)
+		    beyond-system-code)
 		   (list (make-continuation-bline continue #f prev)))
 		  (else (continue))))))))
 
