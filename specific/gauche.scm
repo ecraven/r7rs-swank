@@ -29,12 +29,12 @@
                  ": "
                  (map write-to-string (error-object-irritants error))))
 
-(define sts symbol->string)
+;; required for older gauche which treats keywords distinct from symbols
 (define (symbol->string x)
   (cond ((keyword? x)
          (string-append ":" (keyword->string x)))
         ((symbol? x)
-         (sts x))
+         (scheme:symbol->string x))
         (error "not symbol or keyword" x)))
 
 (define ($output-to-repl thunk)
