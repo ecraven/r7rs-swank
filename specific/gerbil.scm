@@ -55,7 +55,8 @@
 (define hash-table-set! hash-put!)
 (define hash-table-ref/default hash-ref)
 (define hash-table-size hash-length)
-(define hash-table? hash-table?)
+;;(define hash-table? hash-table?)
+(%#extern (hash-table? table?))
 (define (hash-table-walk table fun) (hash-for-each fun table))
 (define hash-table-delete! hash-remove!)
 
