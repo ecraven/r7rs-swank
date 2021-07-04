@@ -1,4 +1,10 @@
 (define *listener-value* #f)
+(define *active-traces* '())
+(define (unquote* sym)
+  (if (and (list? sym)
+           (not (null? (cdr sym)))
+           (eq? (car sym) 'quote))
+      (cadr sym)))
 
 (define-syntax define-slime-handler
   (syntax-rules ()
@@ -360,3 +366,48 @@
 
 (define-slime-handler (swank::describe-to-string object)
   (object-documentation (write-to-string object) (interactive-eval object)))
+
+;;;; Tracing
+(define-slime-handler (swank-trace-dialog:report-total)
+  "Return the total count of traces." ;; e.g. 5
+  0)
+
+(define-slime-handler (swank-trace-dialog:report-specs)
+  "Return a list of traced functions." ;; e.g. (common-lisp-user::fac)
+  (if (null? *active-traces*)
+      '()
+      *active-traces*))
+
+
+(define-slime-handler (swank-trace-dialog:dialog-toggle-trace symbol)  ;; e.g. symbol = (swank::from-string "FAC")
+  (let ((sym (if (and (list? symbol)
+                      (not (null? (cdr symbol)))
+                      (eq? (car symbol) 'swank::from-string))
+                 (string->symbol (cadr symbol))
+                 'ERROR)))
+    (set! *active-traces* (cons sym *active-traces*))
+    (string-append (symbol->string sym) " is now traced for trace dialog")))
+
+(define-slime-handler (swank-trace-dialog:report-partial-tree key) ;; e.g. key = 'slime-trace-dialog-fetch-key-16
+  'nil)
+
+(define-slime-handler (swank-trace-dialog:dialog-untrace sym)
+  (set! *active-traces* (let loop ((lst *active-traces*))
+                          (if (null? lst)
+                              lst
+                              (if (eq? (car lst) (unquote* sym))
+                                  (cdr lst)
+                                  (cons (car lst) (loop (cdr lst)))))))
+  'nil)
+(define-slime-handler (swank-trace-dialog:dialog-untrace-all)
+  (set! *active-traces* '())
+  'nil)
+
+(define-slime-handler (cl:progn . rest)
+  (let loop ((rest rest))
+    (if (null? (cdr rest))
+        (process-form (car rest) (param:environment))
+        (begin
+          (unless (eq? (car rest) 'nil)
+            (process-form (car rest) (param:environment)))
+          (loop (cdr rest))))))
