@@ -5,7 +5,8 @@
           inspect-in-emacs
           make-swank-image
           swank-register-image-converter
-          swank-present)
+          swank-present
+          tracing trace-define trace-let trace-let* trace-letrec trace-letrec*)
   (import (scheme base) (scheme eval) (scheme read) (scheme write)
           (scheme file) (scheme case-lambda) (scheme process-context) (scheme cxr)
           (chibi process) (chibi) (chibi string) (srfi 39) (srfi 1)

@@ -1,7 +1,12 @@
 (define-library (gauche-swank)
   (export start-swank
           swank:lookup-presented-object
-          swank:lookup-presented-object-or-lose)
+          swank:lookup-presented-object-or-lose
+          inspect-in-emacs
+          make-swank-image
+          swank-register-image-converter
+          swank-present
+          tracing trace-define trace-let trace-let* trace-letrec trace-letrec*)
   (import (scheme base) (scheme eval) (scheme read) (scheme write) (scheme file) (scheme case-lambda) (scheme process-context) (scheme repl) (scheme load) (scheme char) (scheme cxr)
           (srfi-69)
           (srfi-27)

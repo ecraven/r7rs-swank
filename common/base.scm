@@ -13,8 +13,8 @@
 (define (hash-table-clear! table)
   "Remove all entries from TABLE."
   (hash-table-walk table
-                        (lambda (key value)
-                          (hash-table-delete! table key))))
+                   (lambda (key value)
+                     (hash-table-delete! table key))))
 
 
 (define (read-all port)
@@ -235,7 +235,7 @@ The secondary value indicates the absence of an entry."
                 (write-message `(:write-image ((:type ,(swank-image-type value)
                                                       ,@(list ':data (encode-swank-image-data (swank-image-data value)))))
                                               ,(swank-image-string value))))
-      #f)
+            #f)
         (let ((c (car cs)))
           (if ((car c) value)
               (swank-convert-to-image ((cdr c) value) type)
@@ -504,8 +504,8 @@ The secondary value indicates the absence of an entry."
 (define (inspect-hash-table object)
   (let ((elements '()))
     (hash-table-walk object
-                      (lambda (key value)
-                        (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () (hash-table-delete! object key))) '(newline) elements))))
+                     (lambda (key value)
+                       (set! elements (cons* `(value ,key) " => " `(value ,value) " " `(action "[remove entry]" ,(lambda () (hash-table-delete! object key))) '(newline) elements))))
     (stream-cons (inspector-line "Length" (hash-table-size object))
                  (stream-cons `(action "[clear hash table]" ,(lambda () (hash-table-clear! object)))
                               (stream-cons '(newline)
@@ -576,10 +576,203 @@ The secondary value indicates the absence of an entry."
           ((< i from) (loop (+ i 1) l (stream-cdr s)))
           (else (loop (+ i 1) (cons (stream-car s) l) (stream-cdr s))))))
 
+(define *traces* '())
+(define-record-type trace-entry
+  (%make-trace-entry id spec parent children arguments return-values)
+  trace-entry?
+  (id trace-entry-id)
+  (spec trace-entry-spec)
+  (parent trace-entry-parent)
+  (children trace-entry-children set-trace-entry-children!)
+  (arguments trace-entry-arguments)
+  (return-values trace-entry-return-values set-trace-entry-return-values!))
+
+(define (make-trace-entry id spec parent arguments)
+  (let ((te (%make-trace-entry id spec parent '() arguments '())))
+    (set! *traces* (cons te *traces*))
+    te))
+
+(define (trace-entry-add-child! trace-entry child)
+  (set-trace-entry-children! trace-entry (cons child (trace-entry-children trace-entry)))
+  trace-entry)
+
+(define *param:current-trace* (make-parameter #f))
+
+(define *next-trace-id* -1)
+(define (next-trace-id)
+  (set! *next-trace-id* (+ *next-trace-id* 1))
+  *next-trace-id*)
+(define (reset-trace-ids!)
+  (set! *next-trace-id* -1))
+(define (traces) *traces*)
+(define (clear-traces!)
+  (set! *traces* '()))
+(define (tracing fun spec)
+  (lambda args
+    (let* ((ct (*param:current-trace*))
+           (te (make-trace-entry (next-trace-id) spec ct args)))
+      (when ct
+        (trace-entry-add-child! ct te))
+      (parameterize ((*param:current-trace* te))
+        (let-values ((retvals (apply fun args)))
+          (set-trace-entry-return-values! te retvals)
+          (apply values retvals))))))
+
+(define (add-index+to-string lst)
+  (let loop ((l lst)
+             (i 0)
+             (result '()))
+    (if (null? l)
+        (reverse result)
+        (loop (cdr l)
+              (+ i 1)
+              (cons (list i (write-to-string (car l))) result)))))
+
+(define (describe-trace-for-emacs trace-entry)
+  `(,(trace-entry-id trace-entry)
+    ,(if (trace-entry-parent trace-entry)
+         (trace-entry-id (trace-entry-parent trace-entry))
+         'nil)
+    ,(if (symbol? (trace-entry-spec trace-entry))
+         (symbol->string (trace-entry-spec trace-entry))
+         (trace-entry-spec trace-entry))
+    ,(add-index+to-string (trace-entry-arguments trace-entry))
+    ,(add-index+to-string (trace-entry-return-values trace-entry))))
+
+(define (find-trace trace-index)
+  (let loop ((t (traces)))
+    (cond ((null? t)
+           #f)
+          ((= (trace-entry-id (car t)) trace-index)
+           (car t))
+          (else
+           (loop (cdr t))))))
+(define *pre-trace-values* '())
+(define (add-pre-tracing-value! sym value)
+  (set! *pre-trace-values* (cons (cons sym value) *pre-trace-values*)))
+(define (pre-trace-values)
+  *pre-trace-values*)
+(define (%pre-tracing-value symbol)
+  (let loop ((t *pre-trace-values*))
+    (cond ((null? t)
+           #f)
+          ((eq? symbol (caar t))
+           (cdar t))
+          (else
+           (loop (cdr t))))))
+(define (untrace! sym)
+  (interactive-eval `(set! ,sym (%pre-tracing-value ',sym)))
+  (remove-pre-tracing-value! sym)
+  (remove-active-trace! sym)
+  (string-append (symbol->string sym) " is now untraced for trace dialog."))
+(define (trace! sym)
+  (let ((value (car (interactive-eval sym))))
+    (if (procedure? value)
+        (begin
+          (add-pre-tracing-value! sym value)
+          (interactive-eval `(set! ,sym (tracing ,sym ',sym)))
+          (add-active-trace! sym)
+          (string-append (symbol->string sym) " is now traced for trace dialog."))
+        (string-append (symbol->string sym) " is not bound to a procedure, not tracing " (write-to-string value)))))
+(define (remove-pre-tracing-value! sym)
+  (set! *pre-trace-values* (let loop ((lst *pre-trace-values*))
+                             (if (null? lst)
+                                 lst
+                                 (if (eq? (caar lst) sym)
+                                     (cdr lst)
+                                     (cons (car lst) (loop (cdr lst))))))))
+(define (add-active-trace! sym)
+  (set! *active-traces* (cons sym *active-traces*)))
+(define (traced-symbol? sym)
+  (memq sym *active-traces*))
+(define (remove-active-trace! sym)
+  (set! *active-traces* (let loop ((lst *active-traces*))
+                          (if (null? lst)
+                              lst
+                              (if (eq? (car lst) sym)
+                                  (cdr lst)
+                                  (cons (car lst) (loop (cdr lst))))))))
+(define (find-trace-arg trace index)
+  (list-ref (trace-entry-arguments trace) index))
+(define (find-trace-retval trace index)
+  (list-ref (trace-entry-return-values trace) index))
+(define-syntax trace-let
+  (syntax-rules ()
+    ((trace-let loop ((name value) ...) body0 body ...)
+     (let loop ((name value) ...)
+       (let* ((ct (*param:current-trace*))
+              (te (make-trace-entry (next-trace-id) (string-append "let " (symbol->string 'loop)) ct (list name ...))))
+         (when ct
+           (trace-entry-add-child! ct te))
+         (parameterize ((*param:current-trace* te))
+           (let-values ((retvals (begin
+                                   body0 body ...)))
+             (set-trace-entry-return-values! te retvals)
+             (apply values retvals))))))
+    ((trace-let ((name value) ...) body0 body ...)
+     (let ((name value) ...)
+       (let* ((ct (*param:current-trace*))
+              (te (make-trace-entry (next-trace-id) (string-append "let") ct (list name ...))))
+         (when ct
+           (trace-entry-add-child! ct te))
+         (parameterize ((*param:current-trace* te))
+           (let-values ((retvals (begin
+                                   body0 body ...)))
+             (set-trace-entry-return-values! te retvals)
+             (apply values retvals))))))))
+(define-syntax trace-let*
+  (syntax-rules ()
+    ((trace-let* ((name value) ...) body0 body ...)
+     (let* ((name value) ...)
+       (let* ((ct (*param:current-trace*))
+              (te (make-trace-entry (next-trace-id) (string-append "let*") ct (list name ...))))
+         (when ct
+           (trace-entry-add-child! ct te))
+         (parameterize ((*param:current-trace* te))
+           (let-values ((retvals (begin
+                                   body0 body ...)))
+             (set-trace-entry-return-values! te retvals)
+             (apply values retvals))))))))
+
+(define-syntax trace-letrec
+  (syntax-rules ()
+    ((trace-letrec ((name value) ...) body0 body ...)
+     (letrec ((name value) ...)
+       (let* ((ct (*param:current-trace*))
+              (te (make-trace-entry (next-trace-id) (string-append "letrec") ct (list name ...))))
+         (when ct
+           (trace-entry-add-child! ct te))
+         (parameterize ((*param:current-trace* te))
+           (let-values ((retvals (begin
+                                   body0 body ...)))
+             (set-trace-entry-return-values! te retvals)
+             (apply values retvals))))))))
+
+(define-syntax trace-letrec*
+  (syntax-rules ()
+    ((trace-letrec* ((name value) ...) body0 body ...)
+     (letrec* ((name value) ...)
+       (let* ((ct (*param:current-trace*))
+              (te (make-trace-entry (next-trace-id) (string-append "letrec*") ct (list name ...))))
+         (when ct
+           (trace-entry-add-child! ct te))
+         (parameterize ((*param:current-trace* te))
+           (let-values ((retvals (begin
+                                   body0 body ...)))
+             (set-trace-entry-return-values! te retvals)
+             (apply values retvals))))))))
+(define-syntax trace-define
+  (syntax-rules ()
+    ((trace-define (name . args) body0 body ...)
+     (define name (tracing (lambda args body0 body ...) 'name)))
+    ((trace-define name (lambda args body0 body ...))
+     (define name (tracing (lambda args body0 body ...) 'name)))))
+;;;; convenience
 (define (inspect-in-emacs object)
   (write-message `(:inspect ,(inspect-object object) nil nil))
   #t)
 
+;;;; swank image support
 (define-record-type swank-image
   (make-swank-image type filename data string)
   swank-image?

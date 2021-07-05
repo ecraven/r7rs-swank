@@ -1,5 +1,6 @@
 (define *listener-value* #f)
 (define *active-traces* '())
+
 (define (unquote* sym)
   (if (and (list? sym)
            (not (null? (cdr sym)))
@@ -370,7 +371,7 @@
 ;;;; Tracing
 (define-slime-handler (swank-trace-dialog:report-total)
   "Return the total count of traces." ;; e.g. 5
-  0)
+  (length (traces)))
 
 (define-slime-handler (swank-trace-dialog:report-specs)
   "Return a list of traced functions." ;; e.g. (common-lisp-user::fac)
@@ -378,29 +379,28 @@
       '()
       *active-traces*))
 
-
 (define-slime-handler (swank-trace-dialog:dialog-toggle-trace symbol)  ;; e.g. symbol = (swank::from-string "FAC")
   (let ((sym (if (and (list? symbol)
                       (not (null? (cdr symbol)))
                       (eq? (car symbol) 'swank::from-string))
                  (string->symbol (cadr symbol))
                  'ERROR)))
-    (set! *active-traces* (cons sym *active-traces*))
-    (string-append (symbol->string sym) " is now traced for trace dialog")))
+    (if (traced-symbol? sym)
+        (untrace! sym)
+        (trace! sym))))
 
 (define-slime-handler (swank-trace-dialog:report-partial-tree key) ;; e.g. key = 'slime-trace-dialog-fetch-key-16
-  'nil)
+  (let ((remaining-count 0)
+        (traces (map describe-trace-for-emacs (reverse (traces)))))
+    (list traces remaining-count (unquote* key))))
 
 (define-slime-handler (swank-trace-dialog:dialog-untrace sym)
-  (set! *active-traces* (let loop ((lst *active-traces*))
-                          (if (null? lst)
-                              lst
-                              (if (eq? (car lst) (unquote* sym))
-                                  (cdr lst)
-                                  (cons (car lst) (loop (cdr lst)))))))
+  (let ((sym (unquote* sym)))
+    (untrace sym))
   'nil)
 (define-slime-handler (swank-trace-dialog:dialog-untrace-all)
   (set! *active-traces* '())
+  (for-each untrace! (map car *pre-trace-values*))
   'nil)
 
 (define-slime-handler (cl:progn . rest)
@@ -411,3 +411,27 @@
           (unless (eq? (car rest) 'nil)
             (process-form (car rest) (param:environment)))
           (loop (cdr rest))))))
+
+(define-slime-handler (swank-trace-dialog:report-trace-detail trace-index)
+  (let ((t (find-trace trace-index)))
+    (if t
+        (append (describe-trace-for-emacs t)
+                (list 'nil ;; backtrace
+                      (trace-entry-spec t)))
+        'nil)))
+
+(define-slime-handler (swank-trace-dialog:inspect-trace-part trace-index index type)
+  ;; type = :arg | :retval
+  (let ((t (find-trace trace-index)))
+    (case type
+      ((:arg)
+       (inspect-object (find-trace-arg t index)))
+      ((:retval)
+       (inspect-object (find-trace-retval t index)))
+      (else
+       'nil))))
+
+(define-slime-handler (swank-trace-dialog:clear-trace-tree)
+  (clear-traces!)
+  (reset-trace-ids!)
+  'nil)
