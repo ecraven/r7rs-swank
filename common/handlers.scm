@@ -396,7 +396,7 @@
 
 (define-slime-handler (swank-trace-dialog:dialog-untrace sym)
   (let ((sym (unquote* sym)))
-    (untrace sym))
+    (untrace! sym))
   'nil)
 (define-slime-handler (swank-trace-dialog:dialog-untrace-all)
   (set! *active-traces* '())

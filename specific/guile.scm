@@ -1,4 +1,4 @@
-(use-modules (srfi srfi-11))
+;;(use-modules (srfi srfi-11))
 (define ($scheme-name)
   "guile")
 
@@ -8,7 +8,7 @@
 (define ($macroexpand-all form)
   (macroexpand form))
 
-(define* (make-server-socket port)
+(define (make-server-socket port)
   (let ((sock (socket PF_INET SOCK_STREAM 0)))
     (setsockopt sock SOL_SOCKET SO_REUSEADDR 1)
     (bind sock AF_INET INADDR_LOOPBACK port)
@@ -62,9 +62,6 @@
                                                        (swank/write-string (get-output-string o) #f)
                                                        (apply values x))))))))
 
-(define ($all-package-names)
-  '())
-
 (define (env-name->environment env-name)
  ;; TODO
   (interaction-environment))
@@ -109,8 +106,8 @@
          (children (append-map all-child-modules roots)))
     (cons "(user)" (filter-map maybe-name children))))
 
-(define* (all-child-modules mod #:optional (seen '()))
-  (let ((cs (filter (lambda (m) (not (member m seen))) (submodules mod))))
+(define (all-child-modules mod . seen)
+  (let ((cs (filter (lambda (m) (not (member m (if (null? seen) seen (car seen))))) (submodules mod))))
     (fold (lambda (m all) (append (all-child-modules m all) all))
           (list mod)
           cs)))
@@ -157,8 +154,6 @@
 
 (define ($inspect-fallback object)
   #f)
-
-(define exact inexact->exact)
 
 (define ($apropos name)
   ;; based on guile's ice-9/session.scm

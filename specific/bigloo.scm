@@ -75,6 +75,12 @@
 (define hash-table-walk hashtable-for-each)
 (define hash-table? hashtable?)
 
+(define ($macroexpand-1 form)
+  form)
+
+(define ($macroexpand-all form)
+  form)
+
 (define ($error-description error)
   error)
 (define ($environment name)
@@ -82,9 +88,14 @@
 (define $pretty-print pp)
 (define string->utf8 (lambda (x) x))
 (define utf8->string (lambda (x) x))
+(define (bytevector . rest)
+  (apply string (map integer->char rest)))
 (define bytevector-length string-length)
 (define (bytevector-u8-ref bv n) (char->integer (string-ref bv n)))
 (define (bytevector? object) #f)
+(define (bytevector-append a b)
+  (string-append a b))
+(define write-bytevector write-string)
 (define (error . args) args) ;;TODO
 (define ($open-tcp-server port-number port-file handler)
   (let* ((n (or port-number (+ 10000 (random 50000))))
@@ -110,8 +121,10 @@
   (read-chars size port))
 (define ($all-package-names)
   '())
-(define (make-bytevector size)
-  (make-string size))
+(define (make-bytevector size . default)
+  (if (null? default)
+      (make-string size)
+      (make-string size (char->integer (car default)))))
 (define exact inexact->exact)
 
 (define (bytevector-copy! to at from)

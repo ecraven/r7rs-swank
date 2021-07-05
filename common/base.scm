@@ -16,7 +16,6 @@
                    (lambda (key value)
                      (hash-table-delete! table key))))
 
-
 (define (read-all port)
   "Read forms from port until eof, return a list"
   (let loop ((result '())
@@ -80,7 +79,6 @@
              (swank/abort ($error-description condition)))
            (lambda () (apply h (cdr form))))
           `(:return (:abort "no handler found") nil)))))
-
 (define start-swank
   (case-lambda (() (start-swank 4005))
                ((port-or-file) (cond ((number? port-or-file)
@@ -89,7 +87,6 @@
                                       (server-loop #f port-or-file))
                                      (else
                                       (error "Please call with port number or filename to which the automatically chosen port number will be written."))))))
-
 (define (server-loop port-number port-file)
   ($open-tcp-server
    port-number port-file
@@ -792,3 +789,4 @@ The secondary value indicates the absence of an entry."
   (unless (procedure? converter)
     (error "swank-register-image-converter: converter must be a procedure" converter))
   (set! *image-converters* (cons (cons predicate converter) *image-converters*)))
+
