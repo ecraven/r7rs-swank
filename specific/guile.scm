@@ -19,8 +19,8 @@
          ((client-socket . _) client-socket)))
 
 (define ($open-tcp-server port-number port-file handler)
-  (let* ((n (or port-number 0))
-         (server-socket (make-server-socket port-number))
+  (let* ((n (or port-number (+ 10000 (random 50000))))
+         (server-socket (make-server-socket n))
          (dummy (listen server-socket 1)))
     (handler n server-socket)))
 
@@ -29,23 +29,23 @@
     (handler port port)))
 
 (define fop flush-output-port)
-(define (flush-output-port . port) (fop (if (null? port) (current-output-port) (car port))))
+;;(define (flush-output-port . port) (fop (if (null? port) (current-output-port) (car port))))
 
-(define (read-bytevector count port) (get-bytevector-n port count))
-(define bvc! bytevector-copy!)
-(define (bytevector-copy! to to-index from)
-  (bvc! from 0 to to-index (bytevector-length from)))
+;;(define (read-bytevector count port) (get-bytevector-n port count))
+;; (define bvc! bytevector-copy!)
+;; (define (bytevector-copy! to to-index from)
+;;   (bvc! from 0 to to-index (bytevector-length from)))
 
-(define write-string display)
+;;(define write-string display)
 
 (define ($all-package-names)
   (all-modules))
 
-(define (with-exception-handler handler thunk)
-  (catch #t
-         thunk
-         (lambda p
-           (handler p))))
+;; (define (with-exception-handler handler thunk)
+;;   (catch #t
+;;          thunk
+;;          (lambda p
+;;            (handler p))))
 
 (define ($error-description error)
   (let ((o (open-output-string)))
@@ -186,7 +186,7 @@
       results)))
 
 (define ($binding-documentation value)
-  (object-documentation value))
+  "No documentation")
 
 (define ($condition-location condition)
   "Return (PATH POSITION LINE COLUMN) for CONDITION."
