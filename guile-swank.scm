@@ -24,9 +24,11 @@
                 module-obarray  module-defined? module-ref variable-bound? variable-ref
                 hash-for-each hash-map->list format
                 macroexpand random set-current-module with-input-from-string with-output-to-string
-                macro? procedure? procedure-documentation format)
+                macro? procedure? procedure-documentation format
+                make-stack stack-length stack-ref frame-source frame-procedure-name)
           (ice-9 exceptions)
-          (ice-9 pretty-print))
+          (ice-9 pretty-print)
+          (system vm frame))
   (export start-swank swank:lookup-presented-object
           swank:lookup-presented-object-or-lose
           make-swank-image

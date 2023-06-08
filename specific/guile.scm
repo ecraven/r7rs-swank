@@ -114,7 +114,31 @@
 
 
 (define ($condition-trace condition)
-  '())
+  (let* ((st (make-stack #t))
+         (n-frames (stack-length st)))
+    (let loop ((i 0)
+               (last-file #f)
+               (res '()))
+      (if (>= i n-frames)
+          res
+          (let* ((fr (stack-ref st i))
+                 (src (frame-source fr)))
+            (if src
+                (let ((file (cadr src)))
+                  (if (equal? file last-file)
+                      (loop (+ i 1)
+                            file
+                            res)
+                      (loop (+ i 1)
+                            file
+                            (cons (format #f "~s: ~s [~s]"
+                                          (frame-procedure-name fr)
+                                          src
+                                          (frame-bindings fr))
+                                  res))))
+                (loop (+ i 1)
+                      last-file
+                      res)))))))
 
 (define ($frame-locals-and-catch-tags nr)
   '())
@@ -128,7 +152,7 @@
       (format #f "~a" condition)))
 
 (define ($condition-links condition)
-  '())
+  (map (lambda (x) 'foo) ($condition-trace condition)))
 
 (define ($handle-condition exception)
   (invoke-sldb exception))
