@@ -24,7 +24,8 @@
                 module-obarray  module-defined? module-ref variable-bound? variable-ref
                 hash-for-each hash-map->list format
                 macroexpand random set-current-module with-input-from-string with-output-to-string
-                macro? procedure? procedure-documentation)
+                macro? procedure? procedure-documentation format)
+          (ice-9 exceptions)
           (ice-9 pretty-print))
   (export start-swank swank:lookup-presented-object
           swank:lookup-presented-object-or-lose

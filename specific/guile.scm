@@ -123,13 +123,15 @@
   #f)
 
 (define ($condition-msg condition)
-  "UNKNOWN")
+  (if (exception-with-message? condition)
+      (exception-message condition)
+      (format #f "~a" condition)))
 
 (define ($condition-links condition)
   '())
 
 (define ($handle-condition exception)
-  #f)
+  (invoke-sldb exception))
 
 (define ($function-parameters-and-documentation name)
   (cons #f #f))
