@@ -134,8 +134,14 @@
 (define ($function-parameters-and-documentation name)
   (cons #f #f))
 
+(define (get-valid-module-name name)
+  (with-input-from-string name read))
+
 (define ($set-package name)
-  (list "(user)" "(user)"))
+  (let ((mod (resolve-module (get-valid-module-name name) #t #:ensure #f)))
+    (when mod
+      (set-current-module mod)))
+  (list name name))
 
 (define ($environment name)
   (interaction-environment))
@@ -186,7 +192,8 @@
       results)))
 
 (define ($binding-documentation value)
-  "No documentation")
+  (cond ((procedure? value) (procedure-documentation value))
+        (else "No documentation.")))
 
 (define ($condition-location condition)
   "Return (PATH POSITION LINE COLUMN) for CONDITION."

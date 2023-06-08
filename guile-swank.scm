@@ -20,9 +20,11 @@
           (only (srfi srfi-13) string-contains-ci string-contains string-replace string-prefix?)
           (only (guile)
                 socket PF_INET SOCK_STREAM setsockopt SOL_SOCKET SO_REUSEADDR bind AF_INET INADDR_LOOPBACK listen accept
-                module-for-each module-uses module-submodules resolve-module module-kind module-name current-module module-obarray variable-bound? variable-ref
+                module-for-each module-uses module-submodules resolve-module module-kind module-name current-module
+                module-obarray  module-defined? module-ref variable-bound? variable-ref
                 hash-for-each hash-map->list format
-                macroexpand random)
+                macroexpand random set-current-module with-input-from-string with-output-to-string
+                macro? procedure? procedure-documentation)
           (ice-9 pretty-print))
   (export start-swank swank:lookup-presented-object
           swank:lookup-presented-object-or-lose
