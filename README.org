@@ -42,6 +42,16 @@ You'll also need https://github.com/ecraven/chez-scheme-libraries.
                                 :env "GAUCHE_KEYWORD_IS_SYMBOL=T")
                 slime-lisp-implementations))
 #+END_SRC
+#+BEGIN_SRC elisp
+    (defun guile-scheme-start-swank (file encoding)
+      (format "%S\n\n" `(begin (import (guile-swank)) (start-swank ,file))))
+    (setq slime-lisp-implementations
+          (cons '(guile-scheme ("guile" "-l" "/path/to/guile-swank.scm")
+                                :init guile-scheme-start-swank
+                                :directory "/path/to/r7rs-swank")
+                slime-lisp-implementations))
+#+END_SRC
+
 *** Chicken Scheme
 #+BEGIN_SRC elisp
     (defun chicken-scheme-start-swank (file encoding)
