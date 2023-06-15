@@ -112,24 +112,50 @@
           (list mod)
           cs)))
 
+(define stack-offset 3)
+
+
+;; we keep the frames returned by $condition-trace, so that frame-locals-and-catch-tags
+;; can access the same frames with the same ordering
+(define stored-frames
+  #())
+
 (define ($condition-trace condition)
-  (let* ((tag %start-stack)
-         (frames (narrow-stack->vector
-                  (make-stack #t)
-                  3
-                  tag
-                  0
-                  tag)))
-    (filter values ;; jump over frames without procedure name
-            (vector->list
-             (vector-map (lambda (fr)
-                           (let ((name (frame-procedure-name fr)))
-                             (and name
-                                  (format #f "~a" name))))
-                         frames)))))
+  (let ((frames (let* ((tag %start-stack)
+                       (frames (narrow-stack->vector
+                                (make-stack #t)
+                                stack-offset
+                                tag
+                                0
+                                tag))
+                       (n-frames (vector-length frames)))
+                  (let loop ((i (- n-frames 1))
+                             (result #()))
+                    (if (< i 0)
+                        result
+                        (let ((fr (vector-ref frames i)))
+                          (if (frame-procedure-name fr)
+                              (loop (- i 1)
+                                    (vector-append (vector fr) result))
+                              (loop (- i 1) result))))))))
+    (set! stored-frames frames)
+    (vector->list
+     (vector-map (lambda (fr)
+                   (format #f "~a" (frame-procedure-name fr)))
+                 frames))))
+
 
 (define ($frame-locals-and-catch-tags nr)
-  '())
+  (let* ((tag %start-stack)
+         (frames stored-frames)
+         (bindings (frame-bindings (vector-ref frames nr)))
+         (entries (map (lambda (i b)
+                         `(:name ,(format #f "~a" (binding-name b))
+                           :id ,i
+                           :value ,(format #f "~a" (binding-ref b))))
+                       (iota (length bindings))
+                       bindings)))
+    (list entries (list 'nil))))
 
 (define ($frame-var-value frame index)
   #f)
