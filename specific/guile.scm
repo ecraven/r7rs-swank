@@ -113,34 +113,20 @@
           cs)))
 
 (define ($condition-trace condition)
-  (let* ((st (make-stack #t))
-         (n-frames (stack-length st)))
-    (let loop ((i (- n-frames 1)) ; jump over swank internal functions
-               (last-file #f)
-               (res '()))
-      (if (<= i 0)
-          (drop res 3)
-          (let* ((fr (stack-ref st i))
-                 (src (frame-source fr)))
-            (cond ;; ((equal? (frame-procedure-name fr)
-                  ;;          'interactive-eval)
-                  ;;  (drop res 3))
-                  (src
-                   (let ((file (cadr src)))
-                     (if (equal? file last-file)
-                         (loop (- i 1)
-                               file
-                               res)
-                         (loop (- i 1)
-                               file
-                               (cons (format #f "~s: ~s [~s]"
-                                             (frame-procedure-name fr)
-                                             src
-                                             (frame-bindings fr))
-                                     res)))))
-                  (else (loop (- i 1)
-                              last-file
-                              res))))))))
+  (let* ((tag %start-stack)
+         (frames (narrow-stack->vector
+                  (make-stack #t)
+                  3
+                  tag
+                  0
+                  tag)))
+    (filter values ;; jump over frames without procedure name
+            (vector->list
+             (vector-map (lambda (fr)
+                           (let ((name (frame-procedure-name fr)))
+                             (and name
+                                  (format #f "~a" name))))
+                         frames)))))
 
 (define ($frame-locals-and-catch-tags nr)
   '())
@@ -186,8 +172,65 @@
   (previous istate-previous)
   (content istate-content))
 
-(define ($inspect-fallback object)
-  #f)
+(define (inspect-class obj)
+  (apply stream
+    (append
+     (list (inspector-line "Name" (class-name obj)))
+     (cons "Super classes: " (return-multi-value (class-direct-supers obj)))
+     '((newline))
+     (cons "Direct Slots: " (return-multi-value (class-direct-slots obj)))
+     '((newline))
+
+     (cons "Sub classes: "
+           (return-multi-value
+            (let ((subs (class-direct-subclasses obj)))
+              (if (null? subs)
+                  (list 'nil)
+                  subs))))
+     '((newline))
+
+      (cons "Precedence List: "
+            (return-multi-value
+             (let ((subs (class-precedence-list obj)))
+               (if (null? subs)
+                   (list 'nil)
+                   subs))))
+     '((newline))
+
+     (list '(newline)
+           "All Slots:"
+           '(newline))
+     (all-slots-for-inspector obj)
+     )))
+
+(define (inspect-instance obj)
+  (let ((cls (class-of obj)))
+    (apply stream
+      (append (list (inspector-line "Class" cls)
+                    "--------------------"
+                    '(newline))
+              (fold (lambda (s acc)
+                     (let ((sname (slot-definition-name s)))
+                       (if (slot-bound? obj sname)
+                           (cons (inspector-line sname
+                                                 (slot-ref obj sname))
+                                 acc)
+                           acc)))
+                    '()
+                    (class-slots cls))))))
+
+(define ($inspect-fallback obj)
+  (cond ((is-a? obj <class>)
+         (inspect-class obj))
+        ((instance? obj)
+         (inspect-instance obj))
+        (else #f)))
+
+(define (all-slots-for-inspector obj)
+  (map (lambda (s)
+         (inspector-line (slot-definition-name s)
+                         (slot-definition-init-value s)))
+       (class-slots obj)))
 
 (define ($apropos name)
   ;; based on guile's ice-9/session.scm
@@ -209,9 +252,9 @@
             (lambda (symbol variable)
               (if (string-contains-ci (symbol->string symbol) pattern)
                   (let* ((binding
-                         (if (variable-bound? variable)
-                             (variable-ref variable)
-                             #f))
+                          (if (variable-bound? variable)
+                              (variable-ref variable)
+                              #f))
                          (documentation ($binding-documentation binding))
                          (type (if (procedure? binding) ':function ':variable)))
                     (set! results (cons (list symbol type documentation) results)))))

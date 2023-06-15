@@ -18,17 +18,21 @@
           (srfi srfi-1)
           (srfi srfi-9)
           (only (srfi srfi-13) string-contains-ci string-contains string-replace string-prefix?)
-          (only (guile)
-                socket PF_INET SOCK_STREAM setsockopt SOL_SOCKET SO_REUSEADDR bind AF_INET INADDR_LOOPBACK listen accept
-                module-for-each module-uses module-submodules resolve-module module-kind module-name current-module
-                module-obarray  module-defined? module-ref variable-bound? variable-ref
-                hash-for-each hash-map->list format
-                macroexpand random set-current-module with-input-from-string with-output-to-string
-                macro? procedure? procedure-documentation format
-                make-stack stack-length stack-ref frame-source frame-procedure-name)
+          (except (guile)
+                  error
+                  exit
+                  include
+                  load
+                  vector->list)
           (ice-9 exceptions)
           (ice-9 pretty-print)
-          (system vm frame))
+          (system vm frame)
+          (system vm program)
+          (only (system repl debug)
+                narrow-stack->vector
+                print-frame
+                stack->vector)
+          (oop goops))
   (export start-swank swank:lookup-presented-object
           swank:lookup-presented-object-or-lose
           make-swank-image

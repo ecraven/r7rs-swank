@@ -573,6 +573,24 @@ The secondary value indicates the absence of an entry."
           ((< i from) (loop (+ i 1) l (stream-cdr s)))
           (else (loop (+ i 1) (cons (stream-car s) l) (stream-cdr s))))))
 
+(define (intersperse sep lst)
+  (let loop ((rem lst)
+             (result '()))
+    (cond ((null? rem)
+           (reverse result))
+          ((null? (cdr rem))
+           (reverse (cons (car rem) result)))
+          (else (loop (cdr rem)
+                      (cons sep
+                            (cons (car rem)
+                                  result)))))))
+
+(define (build-multi-value vals)
+  (intersperse ", "
+               (map (lambda (val)
+                      (cons 'value (list val)))
+                    vals)))
+
 (define *traces* '())
 (define-record-type trace-entry
   (%make-trace-entry id spec parent children arguments return-values)
