@@ -161,11 +161,12 @@
   #f)
 
 (define ($condition-msg condition)
-  (if (exception-with-message? condition)
-      (exception-message condition)
-      (format #f "~a" condition)))
+  (format #f
+          (exception-message condition)
+          (exception-irritants condition)))
 
 (define ($condition-links condition)
+  ;; TODO
   (map (lambda (x) 'foo) ($condition-trace condition)))
 
 (define ($handle-condition exception)
@@ -202,13 +203,13 @@
   (apply stream
     (append
      (list (inspector-line "Name" (class-name obj)))
-     (cons "Super classes: " (return-multi-value (class-direct-supers obj)))
+     (cons "Super classes: " (build-multi-value (class-direct-supers obj)))
      '((newline))
-     (cons "Direct Slots: " (return-multi-value (class-direct-slots obj)))
+     (cons "Direct Slots: " (build-multi-value (class-direct-slots obj)))
      '((newline))
 
      (cons "Sub classes: "
-           (return-multi-value
+           (build-multi-value
             (let ((subs (class-direct-subclasses obj)))
               (if (null? subs)
                   (list 'nil)
@@ -216,7 +217,7 @@
      '((newline))
 
       (cons "Precedence List: "
-            (return-multi-value
+            (build-multi-value
              (let ((subs (class-precedence-list obj)))
                (if (null? subs)
                    (list 'nil)
@@ -245,11 +246,26 @@
                     '()
                     (class-slots cls))))))
 
+(define (inspect-record r)
+  (let* ((rtd (record-type-descriptor r))
+         (fields (record-type-fields rtd)))
+    (apply stream
+           (append (list (format #f "The object is a Record of type ~a."
+                                 (record-type-name rtd))
+                         '(newline))
+                   (map (lambda (f)
+                          (let ((proc (record-accessor rtd f)))
+                            (inspector-line (format #f "~a" f)
+                                            (proc r))))
+                        fields)))))
+
 (define ($inspect-fallback obj)
   (cond ((is-a? obj <class>)
          (inspect-class obj))
         ((instance? obj)
          (inspect-instance obj))
+        ((record? obj)
+         (inspect-record obj))
         (else #f)))
 
 (define (all-slots-for-inspector obj)
