@@ -121,6 +121,8 @@
   #())
 
 (define ($condition-trace condition)
+  ;; we ignore condition for now, since I didn't find a way of getting
+  ;; stack information out of it.
   (let ((frames (let* ((tag %start-stack)
                        (frames (narrow-stack->vector
                                 (make-stack #t)
@@ -166,8 +168,16 @@
           (exception-irritants condition)))
 
 (define ($condition-links condition)
-  ;; TODO
-  (map (lambda (x) 'foo) ($condition-trace condition)))
+  (vector->list
+   (vector-map (lambda (fr)
+                 (let ((src (frame-source fr)))
+                   (if src
+                       (let ((file (source:file src))
+                             (line (source:line src))
+                             (col (source:column src)))
+                         (list file #f line col))
+                       #f)))
+               stored-frames)))
 
 (define ($handle-condition exception)
   (invoke-sldb exception))
@@ -309,5 +319,7 @@
         (else "No documentation.")))
 
 (define ($condition-location condition)
-  "Return (PATH POSITION LINE COLUMN) for CONDITION."
-  #f)
+  ;; a hack. Since in Guile we can't get a backtrace out of a condition
+  ;; object, $condition-links returns directly a list of locations. So
+  ;; we just pass it further. See swank:frame-source-location
+  condition)
