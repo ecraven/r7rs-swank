@@ -211,63 +211,65 @@
 
 (define (inspect-class obj)
   (apply stream
-    (append
-     (list (inspector-line "Name" (class-name obj)))
-     (cons "Super classes: " (build-multi-value (class-direct-supers obj)))
-     '((newline))
-     (cons "Direct Slots: " (build-multi-value (class-direct-slots obj)))
-     '((newline))
+         `(,(inspector-line "Name" (class-name obj))
 
-     (cons "Sub classes: "
-           (build-multi-value
-            (let ((subs (class-direct-subclasses obj)))
-              (if (null? subs)
-                  (list 'nil)
-                  subs))))
-     '((newline))
+           "Super classes: "
+           ,@(build-multi-value (class-direct-supers obj))
+           (newline)
 
-      (cons "Precedence List: "
-            (build-multi-value
-             (let ((subs (class-precedence-list obj)))
-               (if (null? subs)
-                   (list 'nil)
-                   subs))))
-     '((newline))
+           "Direct Slots: "
+           ,@(build-multi-value (class-direct-slots obj))
+           (newline)
 
-     (list '(newline)
+           "Sub classes: "
+           ,@(build-multi-value
+              (let ((subs (class-direct-subclasses obj)))
+                (if (null? subs)
+                    (list 'nil)
+                    subs)))
+           (newline)
+
+           "Precedence List: "
+           ,@(build-multi-value
+              (let ((subs (class-precedence-list obj)))
+                (if (null? subs)
+                    (list 'nil)
+                    subs)))
+           (newline)
+           (newline)
            "All Slots:"
-           '(newline))
-     (all-slots-for-inspector obj)
-     )))
+           (newline)
+           ,@(all-slots-for-inspector obj)
+           )))
 
 (define (inspect-instance obj)
   (let ((cls (class-of obj)))
     (apply stream
-      (append (list (inspector-line "Class" cls)
-                    "--------------------"
-                    '(newline))
-              (fold (lambda (s acc)
-                     (let ((sname (slot-definition-name s)))
-                       (if (slot-bound? obj sname)
-                           (cons (inspector-line sname
-                                                 (slot-ref obj sname))
-                                 acc)
-                           acc)))
-                    '()
-                    (class-slots cls))))))
+           `(,(inspector-line "Class" cls)
+             "--------------------"
+             (newline)
+             ,@(fold (lambda (s acc)
+                       (let ((sname (slot-definition-name s)))
+                         (if (slot-bound? obj sname)
+                             (cons (inspector-line sname
+                                                   (slot-ref obj sname))
+                                   acc)
+                             acc)))
+                     '()
+                     (class-slots cls))))))
 
 (define (inspect-record r)
   (let* ((rtd (record-type-descriptor r))
          (fields (record-type-fields rtd)))
     (apply stream
-           (append (list (format #f "The object is a Record of type ~a."
-                                 (record-type-name rtd))
-                         '(newline))
-                   (map (lambda (f)
-                          (let ((proc (record-accessor rtd f)))
-                            (inspector-line (format #f "~a" f)
-                                            (proc r))))
-                        fields)))))
+           `(,(format #f "The object is a Record of type ~a."
+                      (record-type-name rtd))
+             (newline)
+             ,@(map (lambda (f)
+                      (let ((proc (record-accessor rtd f)))
+                        (inspector-line (format #f "~a" f)
+                                        (proc r))))
+                    fields)))))
 
 (define ($inspect-fallback obj)
   (cond ((is-a? obj <class>)
