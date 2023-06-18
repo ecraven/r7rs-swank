@@ -163,9 +163,10 @@
   #f)
 
 (define ($condition-msg condition)
-  (format #f
-          (exception-message condition)
-          (exception-irritants condition)))
+  (apply format
+         `(#f
+           ,(exception-message condition)
+           ,@(exception-irritants condition))))
 
 (define ($condition-links condition)
   (vector->list
