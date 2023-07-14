@@ -112,30 +112,88 @@
           (list mod)
           cs)))
 
+(define stack-offset 3)
+
+
+;; we keep the frames returned by $condition-trace, so that frame-locals-and-catch-tags
+;; can access the same frames with the same ordering
+(define stored-frames
+  #())
 
 (define ($condition-trace condition)
-  '())
+  ;; we ignore condition for now, since I didn't find a way of getting
+  ;; stack information out of it.
+  (let ((frames (let* ((tag %start-stack)
+                       (frames (narrow-stack->vector
+                                (make-stack #t)
+                                stack-offset
+                                tag
+                                0
+                                tag))
+                       (n-frames (vector-length frames)))
+                  (let loop ((i (- n-frames 1))
+                             (result #()))
+                    (if (< i 0)
+                        result
+                        (let ((fr (vector-ref frames i)))
+                          (if (frame-procedure-name fr)
+                              (loop (- i 1)
+                                    (vector-append (vector fr) result))
+                              (loop (- i 1) result))))))))
+    (set! stored-frames frames)
+    (vector->list
+     (vector-map (lambda (fr)
+                   (format #f "~a" (frame-procedure-name fr)))
+                 frames))))
+
 
 (define ($frame-locals-and-catch-tags nr)
-  '())
+  (let* ((tag %start-stack)
+         (frames stored-frames)
+         (bindings (frame-bindings (vector-ref frames nr)))
+         (entries (map (lambda (i b)
+                         `(:name ,(format #f "~a" (binding-name b))
+                           :id ,i
+                           :value ,(format #f "~a" (binding-ref b))))
+                       (iota (length bindings))
+                       bindings)))
+    (list entries (list 'nil))))
 
 (define ($frame-var-value frame index)
   #f)
 
 (define ($condition-msg condition)
-  "UNKNOWN")
+  (apply format
+         `(#f
+           ,(exception-message condition)
+           ,@(exception-irritants condition))))
 
 (define ($condition-links condition)
-  '())
+  (vector->list
+   (vector-map (lambda (fr)
+                 (let ((src (frame-source fr)))
+                   (if src
+                       (let ((file (source:file src))
+                             (line (source:line src))
+                             (col (source:column src)))
+                         (list file #f line col))
+                       #f)))
+               stored-frames)))
 
 (define ($handle-condition exception)
-  #f)
+  (invoke-sldb exception))
 
 (define ($function-parameters-and-documentation name)
   (cons #f #f))
 
+(define (get-valid-module-name name)
+  (with-input-from-string name read))
+
 (define ($set-package name)
-  (list "(user)" "(user)"))
+  (let ((mod (resolve-module (get-valid-module-name name) #t #:ensure #f)))
+    (when mod
+      (set-current-module mod)))
+  (list name name))
 
 (define ($environment name)
   (interaction-environment))
@@ -152,8 +210,82 @@
   (previous istate-previous)
   (content istate-content))
 
-(define ($inspect-fallback object)
-  #f)
+(define (inspect-class obj)
+  (apply stream
+         `(,(inspector-line "Name" (class-name obj))
+
+           "Super classes: "
+           ,@(build-multi-value (class-direct-supers obj))
+           (newline)
+
+           "Direct Slots: "
+           ,@(build-multi-value (class-direct-slots obj))
+           (newline)
+
+           "Sub classes: "
+           ,@(build-multi-value
+              (let ((subs (class-direct-subclasses obj)))
+                (if (null? subs)
+                    (list 'nil)
+                    subs)))
+           (newline)
+
+           "Precedence List: "
+           ,@(build-multi-value
+              (let ((subs (class-precedence-list obj)))
+                (if (null? subs)
+                    (list 'nil)
+                    subs)))
+           (newline)
+           (newline)
+           "All Slots:"
+           (newline)
+           ,@(all-slots-for-inspector obj)
+           )))
+
+(define (inspect-instance obj)
+  (let ((cls (class-of obj)))
+    (apply stream
+           `(,(inspector-line "Class" cls)
+             "--------------------"
+             (newline)
+             ,@(fold (lambda (s acc)
+                       (let ((sname (slot-definition-name s)))
+                         (if (slot-bound? obj sname)
+                             (cons (inspector-line sname
+                                                   (slot-ref obj sname))
+                                   acc)
+                             acc)))
+                     '()
+                     (class-slots cls))))))
+
+(define (inspect-record r)
+  (let* ((rtd (record-type-descriptor r))
+         (fields (record-type-fields rtd)))
+    (apply stream
+           `(,(format #f "The object is a Record of type ~a."
+                      (record-type-name rtd))
+             (newline)
+             ,@(map (lambda (f)
+                      (let ((proc (record-accessor rtd f)))
+                        (inspector-line (format #f "~a" f)
+                                        (proc r))))
+                    fields)))))
+
+(define ($inspect-fallback obj)
+  (cond ((is-a? obj <class>)
+         (inspect-class obj))
+        ((instance? obj)
+         (inspect-instance obj))
+        ((record? obj)
+         (inspect-record obj))
+        (else #f)))
+
+(define (all-slots-for-inspector obj)
+  (map (lambda (s)
+         (inspector-line (slot-definition-name s)
+                         (slot-definition-init-value s)))
+       (class-slots obj)))
 
 (define ($apropos name)
   ;; based on guile's ice-9/session.scm
@@ -175,9 +307,9 @@
             (lambda (symbol variable)
               (if (string-contains-ci (symbol->string symbol) pattern)
                   (let* ((binding
-                         (if (variable-bound? variable)
-                             (variable-ref variable)
-                             #f))
+                          (if (variable-bound? variable)
+                              (variable-ref variable)
+                              #f))
                          (documentation ($binding-documentation binding))
                          (type (if (procedure? binding) ':function ':variable)))
                     (set! results (cons (list symbol type documentation) results)))))
@@ -186,8 +318,11 @@
       results)))
 
 (define ($binding-documentation value)
-  "No documentation")
+  (cond ((procedure? value) (procedure-documentation value))
+        (else "No documentation.")))
 
 (define ($condition-location condition)
-  "Return (PATH POSITION LINE COLUMN) for CONDITION."
-  #f)
+  ;; a hack. Since in Guile we can't get a backtrace out of a condition
+  ;; object, $condition-links returns directly a list of locations. So
+  ;; we just pass it further. See swank:frame-source-location
+  condition)
