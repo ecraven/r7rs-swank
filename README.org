@@ -1,8 +1,9 @@
 * Swankish, a SLIME swank for Schemes
-** Schemes
-   Support for various Schemes varies in quality. Not everything works on every Scheme.
-   
-   See each Schemes entry for how to configure it in your Emacs configuration.
+
+Support for various Schemes varies in quality. Not everything works on every Scheme.
+
+** Emacs Configuration
+
 *** Chibi Scheme
 #+BEGIN_SRC elisp
 (defun chibi-scheme-start-swank (file encoding)
@@ -42,6 +43,8 @@ You'll also need https://github.com/ecraven/chez-scheme-libraries.
                                 :env "GAUCHE_KEYWORD_IS_SYMBOL=T")
                 slime-lisp-implementations))
 #+END_SRC
+
+*** Guile
 #+BEGIN_SRC elisp
     (defun guile-scheme-start-swank (file encoding)
       (format "%S\n\n" `(begin (import (guile-swank)) (start-swank ,file))))
@@ -72,6 +75,14 @@ You'll also need https://github.com/ecraven/chez-scheme-libraries.
                        :directory "/path/to/r7rs-swank/")
                 slime-lisp-implementations))
 #+END_SRC
+
+** Lem configuration
+
+- [[https://lem-project.github.io/lem-page/modes/guile/][Guile]]
+- [[https://lem-project.github.io/lem-page/modes/racket/][Racket]]
+
+
+
 ** TODO [3/6]
 - [ ] proper information about the current Scheme
 - [X] redirect output to Slime
