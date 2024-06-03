@@ -142,6 +142,9 @@
 ;;     (write val o)
 ;;     (get-output-string o)))
 
+(define ($environment-name environment)
+  '(user))
+
 (define ($environment env-name)
   ;; don't support any changes
   (interaction-environment))

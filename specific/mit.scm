@@ -743,6 +743,9 @@
                               (loop (cdr n) (cdr v)))))))
         (else #f)))
 
+(define ($environment-name environment)
+  '(user))
+
 (define ($environment env-name)
   ;; TODO
   (interaction-environment))

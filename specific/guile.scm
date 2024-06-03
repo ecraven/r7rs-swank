@@ -195,8 +195,10 @@
       (set-current-module mod)))
   (list name name))
 
-(define ($environment name)
-  (interaction-environment))
+(define ($environment-name environment)
+  '(user))
+
+(define $environment env-name->environment)
 
 (define $pretty-print pretty-print)
 

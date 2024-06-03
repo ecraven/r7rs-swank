@@ -31,7 +31,8 @@
          :machine (:instance "host" :type "X86-64")
          :features (:swank)
          :modules ("SWANK-ARGLISTS" "SWANK-REPL" "SWANK-PRESENTATIONS")
-         :package (:name "(user)" :prompt "(user)")
+         :package (:name ,(environment-name-as-string (param:environment))
+                   :prompt ,(environment-name-as-string (param:environment)))
          :version "2.28"))
 
 (define-slime-handler (swank:swank-require packages)

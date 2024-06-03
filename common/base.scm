@@ -787,6 +787,9 @@ The secondary value indicates the absence of an entry."
   (write-message `(:inspect ,(inspect-object object) nil nil))
   #t)
 
+(define (environment-name-as-string environment)
+  (write-to-string ($environment-name environment)))
+
 ;;;; swank image support
 (define-record-type swank-image
   (make-swank-image type filename data string)

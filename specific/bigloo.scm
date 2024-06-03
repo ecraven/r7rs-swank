@@ -83,6 +83,8 @@
 
 (define ($error-description error)
   error)
+(define ($environment-name environment)
+  '(user))
 (define ($environment name)
   (interaction-environment))
 (define $pretty-print pp)

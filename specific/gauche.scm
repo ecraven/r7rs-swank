@@ -58,6 +58,8 @@
   (list "(user)" "(user)"))
 
 (define env (interaction-environment))
+(define ($environment-name environment)
+  '(user))
 (define ($environment name)
   env)
 
