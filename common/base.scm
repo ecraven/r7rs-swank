@@ -264,7 +264,7 @@ The secondary value indicates the absence of an entry."
   (if (and (list? x)
            (eq? (car x) 'quote))
       (cond ((string? (cadr x))
-             (cadr x))
+             (read-from-string (cadr x)))
             ((eq? (cadr x) 'nil)
              "(user)")
             (else ;; TODO
@@ -789,6 +789,10 @@ The secondary value indicates the absence of an entry."
 
 (define (environment-name-as-string environment)
   (write-to-string ($environment-name environment)))
+(define (package-string->environment string)
+  (if (string=? string "COMMON-LISP-USER")
+      (interaction-environment)
+      ($environment (read-from-string string))))
 
 ;;;; swank image support
 (define-record-type swank-image

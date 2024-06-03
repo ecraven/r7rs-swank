@@ -12,15 +12,16 @@
     ((define-slime-handler (name . params) body0 body1 ...)
      (register-slime-handler! 'name (lambda params body0 body1 ...)))))
 
-(define-slime-handler (:emacs-rex sexp env-name thread id)
+(define-slime-handler (:emacs-rex sexp package-string thread id)
   (call-with-current-continuation
    (lambda (exit)
      (parameterize ((param:abort (lambda (message)
                                    (exit `(:return (:abort ,message)
                                                    ,id))))
-                    (param:environment ($environment env-name))
+                    (param:environment
+                     (package-string->environment package-string))
                     (param:current-id id))
-       `(:return (:ok ,(process-form sexp env-name))
+       `(:return (:ok ,(process-form sexp package-string))
                  ,id)))))
 
 (define-slime-handler (swank:connection-info)

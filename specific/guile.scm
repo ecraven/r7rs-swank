@@ -63,8 +63,7 @@
                                                        (apply values x))))))))
 
 (define (env-name->environment env-name)
- ;; TODO
-  (interaction-environment))
+  (resolve-module env-name))
 (define (environment-bindings env)
   (define (env-binds env)
     (let ((results '()))
@@ -196,7 +195,7 @@
   (list name name))
 
 (define ($environment-name environment)
-  '(user))
+  (module-name environment))
 
 (define $environment env-name->environment)
 
