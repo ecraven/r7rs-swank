@@ -95,6 +95,9 @@
   '(user))
 (define $environment env-name->environment)
 
+(define ($current-environment)
+  (interaction-environment))
+
 (define (environment-bindings env-name)
   (let ((env (env-name->environment env-name)))
     (if env

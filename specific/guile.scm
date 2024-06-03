@@ -200,6 +200,9 @@
 
 (define $environment env-name->environment)
 
+(define ($current-environment)
+  (current-module))
+
 (define $pretty-print pretty-print)
 
 (define-record-type <istate>

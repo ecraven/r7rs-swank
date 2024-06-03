@@ -87,6 +87,8 @@
   '(user))
 (define ($environment name)
   (interaction-environment))
+(define ($current-environment)
+  (interaction-environment))
 (define $pretty-print pp)
 (define string->utf8 (lambda (x) x))
 (define utf8->string (lambda (x) x))

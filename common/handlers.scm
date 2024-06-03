@@ -31,8 +31,8 @@
          :machine (:instance "host" :type "X86-64")
          :features (:swank)
          :modules ("SWANK-ARGLISTS" "SWANK-REPL" "SWANK-PRESENTATIONS")
-         :package (:name ,(environment-name-as-string (param:environment))
-                   :prompt ,(environment-name-as-string (param:environment)))
+         :package (:name ,(environment-name-as-string ($current-environment))
+                   :prompt ,(environment-name-as-string ($current-environment)))
          :version "2.28"))
 
 (define-slime-handler (swank:swank-require packages)
@@ -50,7 +50,8 @@
   (swank:lookup-presented-object num))
 
 (define-slime-handler (swank-repl:create-repl . args)
-  (list "(user)" "(user)"))
+  (list (environment-name-as-string ($current-environment))
+        (environment-name-as-string ($current-environment))))
 
 (define-slime-handler (swank-repl:listener-eval form)
   (let* ((form (replace-readtime-lookup-presented-object-or-lose form))
@@ -88,7 +89,7 @@
     `(:compilation-result nil t 0.001 nil nil)))
 
 (define-slime-handler (swank:load-file filename)
-  (let ((results ($output-to-repl (lambda () (load filename (param:environment))))))
+  (let ((results ($output-to-repl (lambda () (load filename ($current-environment))))))
     'loaded))
 
 (define-slime-handler (swank:set-package name)

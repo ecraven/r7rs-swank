@@ -721,7 +721,7 @@
 (define ($function-parameters-and-documentation name)
   ;; TODO
   (let ((binding #f))
-    (cons (procedure-parameters (string->symbol name) ($environment param:environment))
+    (cons (procedure-parameters (string->symbol name) ($current-environment))
           ($binding-documentation binding))))
 
 (define (string-replace s1 s2 start1 end1) ;; . start2+end2
@@ -749,6 +749,9 @@
 (define ($environment env-name)
   ;; TODO
   (interaction-environment))
+
+(define ($current-environment)
+  (nearest-repl/environment))
 
 (define ($error-description condition)
   (condition/report-string condition))

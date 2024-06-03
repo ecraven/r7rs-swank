@@ -136,7 +136,7 @@
   (hash-table-ref/default *handlers* name #f))
 
 (define (interactive-eval sexp)
-  (let-values ((vals (eval sexp (param:environment)))) ;; TODO environment
+  (let-values ((vals (eval sexp ($current-environment))))
     vals))
 
 (define *presentations* (make-hash-table))
@@ -527,7 +527,7 @@ The secondary value indicates the absence of an entry."
                        (stream))))))
 
 (define (binding-value symbol)
-  (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval symbol (param:environment)))))))
+  (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval symbol ($current-environment)))))))
 
 (define (object-documentation name object)
   (let ((doc ($binding-documentation object)))

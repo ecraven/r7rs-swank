@@ -112,6 +112,9 @@
 (define ($environment name)
   (interaction-environment))
 
+(define ($current-environment)
+  (interaction-environment))
+
 (define ($condition-trace condition)
   (map *:toString ($condition-links condition)))
 
