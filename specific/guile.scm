@@ -182,8 +182,31 @@
 (define ($handle-condition exception)
   (invoke-sldb exception))
 
+(define (procedure-parameters procedure)
+  (let ((arguments (procedure-arguments procedure)))
+    (and arguments
+         (let ((required (cdar arguments))
+               (optional (cdadr arguments))
+               (keyword (cdaddr arguments))
+               (allow-other-keys? (cdar (cdddr arguments)))
+               (rest (cdar (cddddr arguments))))
+           (append required
+                   (cons '#:optional optional)
+                   (cons '#:key keyword)
+                   (if allow-other-keys?
+                       (list '#:allow-other-keys?)
+                       '())
+                   (cons '#:rest rest))))))
+
 (define ($function-parameters-and-documentation name)
-  (cons #f #f))
+  (let ((thing (module-variable (current-module)
+                                (string->symbol name))))
+    (if (and thing
+             (procedure? (variable-ref thing)))
+        (let ((procedure (variable-ref thing)))
+          (cons (cons (string->symbol name) (procedure-parameters procedure))
+                (procedure-documentation procedure)))
+        (cons #f #f))))
 
 (define (get-valid-module-name name)
   (with-input-from-string name read))

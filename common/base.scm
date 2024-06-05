@@ -285,7 +285,8 @@ The secondary value indicates the absence of an entry."
 (define (find-expression-containing-swank-cursor-marker expr)
   (define (f expr exit)
     (if (list? expr)
-        (if (member '|swank::%cursor-marker%| expr)
+        (if (or (member '|swank::%cursor-marker%| expr)
+                (member 'swank::%cursor-marker% expr))
             expr
             (let ((res (find (lambda (ex)
                                (f ex exit))
@@ -296,17 +297,20 @@ The secondary value indicates the absence of an entry."
 
 (define (highlight-at-cursor signature expr)
   (let* ((form (find-expression-containing-swank-cursor-marker (cdr expr)))
-         (index (list-index (lambda (el) (eq? el '|swank::%cursor-marker%|)) form)))
+         (index (list-index (lambda (el)
+                              (or (eq? el '|swank::%cursor-marker%|)
+                                  (eq? el 'swank::%cursor-marker%)))
+                            form)))
     (if index
         (wrap-item/index (improper->proper-list signature) (- index 1) '===> '<===)
         '())))
 
 (define (find-string-before-swank-cursor-marker expr)
   (let ((ex (find-expression-containing-swank-cursor-marker expr)))
-    (if ex
-        (if (string? (car ex))
-            (car ex)
-            #f))))
+    (and ex
+         (if (string? (car ex))
+             (car ex)
+             #f))))
 
 (define (wrap-item/index lst index before-marker after-marker)
   (let loop ((i 0)

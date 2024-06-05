@@ -26,6 +26,8 @@
                   vector->list)
           (ice-9 exceptions)
           (ice-9 pretty-print)
+          (only (ice-9 session)
+                procedure-arguments)
           (system vm frame)
           (system vm program)
           (only (system repl debug)
