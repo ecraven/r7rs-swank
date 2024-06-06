@@ -142,7 +142,9 @@
     (set! stored-frames frames)
     (vector->list
      (vector-map (lambda (fr)
-                   (format #f "~a" (frame-procedure-name fr)))
+                   (format #f "~a ~a"
+                           (frame-procedure-name fr)
+                           (frame-arguments fr)))
                  frames))))
 
 
