@@ -743,12 +743,20 @@
                               (loop (cdr n) (cdr v)))))))
         (else #f)))
 
+(define ($set-package name)
+  (ge ($environment (read-from-string name)))
+  (list name name))
+
 (define ($environment-name environment)
-  '(user))
+  (if (eq? unknown-environment environment)
+      unknown-environment
+      (let ((package (environment->package environment)))
+	(if package
+	    (package/name package)
+	    (string->symbol (string anonymous-package-prefix (object-hash environment)))))))
 
 (define ($environment env-name)
-  ;; TODO
-  (interaction-environment))
+  (package/environment (find-package env-name #t)))
 
 (define ($current-environment)
   (nearest-repl/environment))
@@ -768,10 +776,7 @@
 (define (env->pstring env)
   (if (eq? unknown-environment env)
       "unknown environment"
-      (let ((package (environment->package env)))
-	(if package
-	    (write-to-string (package/name package))
-	    (string anonymous-package-prefix (object-hash env))))))
+      (write-to-string ($environment-name env))))
 
 (define (with-exception-handler handler thunk)
   (bind-condition-handler (list condition-type:serious-condition)
