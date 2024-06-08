@@ -56,7 +56,11 @@
 
 (define-slime-handler (swank-repl:listener-eval form)
   (let* ((form (replace-readtime-lookup-presented-object-or-lose form))
-	 (results ($output-to-repl (lambda () (interactive-eval (cons 'begin (read-all (open-input-string form))))))))
+	 (results ($output-to-repl (lambda ()
+                                     (interactive-eval
+                                      (cons 'begin
+                                            (replace-lookup-presented-object-or-lose
+                                             (read-all (open-input-string form)))))))))
     (for-each (lambda (val)
                 (if (presentations?)
                     (present val ':repl-result)

@@ -167,13 +167,27 @@ The secondary value indicates the absence of an entry."
           object))))
 
 (define (replace-readtime-lookup-presented-object-or-lose string)
-  "For presentations, emacs passes something that common lisp evals at read time. The resulting object is very different than what gerbil or gambits #. tries to do, so we do everything at run time"
+  "For presentations, emacs passes something that common lisp evals at read time. The resulting object is very different than what gerbil or gambits #. tries to do, so strip the #. and pattern-match to evaluate this form at runtime."
   (let* ((pattern "#.(swank:lookup-presented-object-or-lose ")
 	 (start (string-contains string pattern)))
     (if start
         (replace-readtime-lookup-presented-object-or-lose
          (string-replace string "" start (+ 2 start)))
         string)))
+
+(define (replace-lookup-presented-object-or-lose form)
+  (define (recons form x y)
+    (if (and (eq? x (car form))
+             (eq? y (cdr form)))
+        form
+        (cons x y)))
+  (if (pair? form)
+      (if (eq? (car form) 'swank:lookup-presented-object-or-lose)
+          (swank:lookup-presented-object-or-lose (cadr form))
+          (recons form
+                  (replace-lookup-presented-object-or-lose (car form))
+                  (replace-lookup-presented-object-or-lose (cdr form))))
+      form))
 
 (define last-presentation-id 0)
 (define (next-presentation-id)
