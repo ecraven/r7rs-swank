@@ -52,15 +52,22 @@
     (write error o)
     (get-output-string o)))
 
+(define repl-output-port
+  (make-soft-port
+   (vector (lambda (c)
+             (write-message `(:write-string ,(string c))))
+           (lambda (s)
+             (write-message `(:write-string ,s)))
+           (lambda () #f)
+           #f
+           (lambda () #f)
+           #f)
+   "w"))
+
 (define ($output-to-repl thunk)
-  ;; basic implementation, print all output at the end, this should
-  ;; be replaced with a custom output port
-  (let ((o (open-output-string)))
-    (with-output-to-port o (lambda ()
-                             (with-error-to-port o (lambda ()
-                                                     (let-values ((x (thunk)))
-                                                       (swank/write-string (get-output-string o) #f)
-                                                       (apply values x))))))))
+  (with-output-to-port repl-output-port
+    (lambda ()
+      (with-error-to-port repl-output-port thunk))))
 
 (define (env-name->environment env-name)
   (resolve-module env-name))
