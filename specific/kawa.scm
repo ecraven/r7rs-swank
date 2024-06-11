@@ -106,7 +106,13 @@
 (define ($set-package name)
   (list "(user)" "(user)"))
 
+(define ($environment-name environment)
+  '(user))
+
 (define ($environment name)
+  (interaction-environment))
+
+(define ($current-environment)
   (interaction-environment))
 
 (define ($condition-trace condition)

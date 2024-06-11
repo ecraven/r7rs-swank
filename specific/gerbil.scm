@@ -91,7 +91,12 @@
          (let ((name (string->symbol env-name)))
            (find (lambda (e) (eq? (expander-context-id e) name))
                  (filter module-context? (map cdr (hash->list (current-expander-module-registry)))))))))
+(define ($environment-name environment)
+  '(user))
 (define $environment env-name->environment)
+
+(define ($current-environment)
+  (interaction-environment))
 
 (define (environment-bindings env-name)
   (let ((env (env-name->environment env-name)))

@@ -52,19 +52,25 @@
     (write error o)
     (get-output-string o)))
 
+(define repl-output-port
+  (make-soft-port
+   (vector (lambda (c)
+             (write-message `(:write-string ,(string c))))
+           (lambda (s)
+             (write-message `(:write-string ,s)))
+           (lambda () #f)
+           #f
+           (lambda () #f)
+           #f)
+   "w"))
+
 (define ($output-to-repl thunk)
-  ;; basic implementation, print all output at the end, this should
-  ;; be replaced with a custom output port
-  (let ((o (open-output-string)))
-    (with-output-to-port o (lambda ()
-                             (with-error-to-port o (lambda ()
-                                                     (let-values ((x (thunk)))
-                                                       (swank/write-string (get-output-string o) #f)
-                                                       (apply values x))))))))
+  (with-output-to-port repl-output-port
+    (lambda ()
+      (with-error-to-port repl-output-port thunk))))
 
 (define (env-name->environment env-name)
- ;; TODO
-  (interaction-environment))
+  (resolve-module env-name))
 (define (environment-bindings env)
   (define (env-binds env)
     (let ((results '()))
@@ -143,7 +149,9 @@
     (set! stored-frames frames)
     (vector->list
      (vector-map (lambda (fr)
-                   (format #f "~a" (frame-procedure-name fr)))
+                   (format #f "~a ~a"
+                           (frame-procedure-name fr)
+                           (frame-arguments fr)))
                  frames))))
 
 
@@ -183,8 +191,31 @@
 (define ($handle-condition exception)
   (invoke-sldb exception))
 
+(define (procedure-parameters procedure)
+  (let ((arguments (procedure-arguments procedure)))
+    (and arguments
+         (let ((required (cdar arguments))
+               (optional (cdadr arguments))
+               (keyword (cdaddr arguments))
+               (allow-other-keys? (cdar (cdddr arguments)))
+               (rest (cdar (cddddr arguments))))
+           (append required
+                   (cons '#:optional optional)
+                   (cons '#:key keyword)
+                   (if allow-other-keys?
+                       (list '#:allow-other-keys?)
+                       '())
+                   (cons '#:rest rest))))))
+
 (define ($function-parameters-and-documentation name)
-  (cons #f #f))
+  (let ((thing (module-variable (current-module)
+                                (string->symbol name))))
+    (if (and thing
+             (procedure? (variable-ref thing)))
+        (let ((procedure (variable-ref thing)))
+          (cons (cons (string->symbol name) (procedure-parameters procedure))
+                (procedure-documentation procedure)))
+        (cons #f #f))))
 
 (define (get-valid-module-name name)
   (with-input-from-string name read))
@@ -195,8 +226,13 @@
       (set-current-module mod)))
   (list name name))
 
-(define ($environment name)
-  (interaction-environment))
+(define ($environment-name environment)
+  (module-name environment))
+
+(define $environment env-name->environment)
+
+(define ($current-environment)
+  (current-module))
 
 (define $pretty-print pretty-print)
 

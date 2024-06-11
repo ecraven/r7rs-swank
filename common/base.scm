@@ -136,7 +136,7 @@
   (hash-table-ref/default *handlers* name #f))
 
 (define (interactive-eval sexp)
-  (let-values ((vals (eval sexp (param:environment)))) ;; TODO environment
+  (let-values ((vals (eval sexp ($current-environment))))
     vals))
 
 (define *presentations* (make-hash-table))
@@ -167,13 +167,27 @@ The secondary value indicates the absence of an entry."
           object))))
 
 (define (replace-readtime-lookup-presented-object-or-lose string)
-  "For presentations, emacs passes something that common lisp evals at read time. The resulting object is very different than what gerbil or gambits #. tries to do, so we do everything at run time"
+  "For presentations, emacs passes something that common lisp evals at read time. The resulting object is very different than what gerbil or gambits #. tries to do, so strip the #. and pattern-match to evaluate this form at runtime."
   (let* ((pattern "#.(swank:lookup-presented-object-or-lose ")
 	 (start (string-contains string pattern)))
     (if start
         (replace-readtime-lookup-presented-object-or-lose
          (string-replace string "" start (+ 2 start)))
         string)))
+
+(define (replace-lookup-presented-object-or-lose form)
+  (define (recons form x y)
+    (if (and (eq? x (car form))
+             (eq? y (cdr form)))
+        form
+        (cons x y)))
+  (if (pair? form)
+      (if (eq? (car form) 'swank:lookup-presented-object-or-lose)
+          (swank:lookup-presented-object-or-lose (cadr form))
+          (recons form
+                  (replace-lookup-presented-object-or-lose (car form))
+                  (replace-lookup-presented-object-or-lose (cdr form))))
+      form))
 
 (define last-presentation-id 0)
 (define (next-presentation-id)
@@ -264,7 +278,7 @@ The secondary value indicates the absence of an entry."
   (if (and (list? x)
            (eq? (car x) 'quote))
       (cond ((string? (cadr x))
-             (cadr x))
+             (read-from-string (cadr x)))
             ((eq? (cadr x) 'nil)
              "(user)")
             (else ;; TODO
@@ -285,7 +299,8 @@ The secondary value indicates the absence of an entry."
 (define (find-expression-containing-swank-cursor-marker expr)
   (define (f expr exit)
     (if (list? expr)
-        (if (member '|swank::%cursor-marker%| expr)
+        (if (or (member '|swank::%cursor-marker%| expr)
+                (member 'swank::%cursor-marker% expr))
             expr
             (let ((res (find (lambda (ex)
                                (f ex exit))
@@ -296,17 +311,20 @@ The secondary value indicates the absence of an entry."
 
 (define (highlight-at-cursor signature expr)
   (let* ((form (find-expression-containing-swank-cursor-marker (cdr expr)))
-         (index (list-index (lambda (el) (eq? el '|swank::%cursor-marker%|)) form)))
+         (index (list-index (lambda (el)
+                              (or (eq? el '|swank::%cursor-marker%|)
+                                  (eq? el 'swank::%cursor-marker%)))
+                            form)))
     (if index
         (wrap-item/index (improper->proper-list signature) (- index 1) '===> '<===)
         '())))
 
 (define (find-string-before-swank-cursor-marker expr)
   (let ((ex (find-expression-containing-swank-cursor-marker expr)))
-    (if ex
-        (if (string? (car ex))
-            (car ex)
-            #f))))
+    (and ex
+         (if (string? (car ex))
+             (car ex)
+             #f))))
 
 (define (wrap-item/index lst index before-marker after-marker)
   (let loop ((i 0)
@@ -527,7 +545,7 @@ The secondary value indicates the absence of an entry."
                        (stream))))))
 
 (define (binding-value symbol)
-  (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval symbol (param:environment)))))))
+  (call/cc (lambda (k) (with-exception-handler (lambda (c) (k #f)) (lambda () (eval symbol ($current-environment)))))))
 
 (define (object-documentation name object)
   (let ((doc ($binding-documentation object)))
@@ -786,6 +804,13 @@ The secondary value indicates the absence of an entry."
 (define (inspect-in-emacs object)
   (write-message `(:inspect ,(inspect-object object) nil nil))
   #t)
+
+(define (environment-name-as-string environment)
+  (write-to-string ($environment-name environment)))
+(define (package-string->environment string)
+  (if (string=? string "COMMON-LISP-USER")
+      (interaction-environment)
+      ($environment (read-from-string string))))
 
 ;;;; swank image support
 (define-record-type swank-image

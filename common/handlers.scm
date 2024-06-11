@@ -12,15 +12,16 @@
     ((define-slime-handler (name . params) body0 body1 ...)
      (register-slime-handler! 'name (lambda params body0 body1 ...)))))
 
-(define-slime-handler (:emacs-rex sexp env-name thread id)
+(define-slime-handler (:emacs-rex sexp package-string thread id)
   (call-with-current-continuation
    (lambda (exit)
      (parameterize ((param:abort (lambda (message)
                                    (exit `(:return (:abort ,message)
                                                    ,id))))
-                    (param:environment ($environment env-name))
+                    (param:environment
+                     (package-string->environment package-string))
                     (param:current-id id))
-       `(:return (:ok ,(process-form sexp env-name))
+       `(:return (:ok ,(process-form sexp package-string))
                  ,id)))))
 
 (define-slime-handler (swank:connection-info)
@@ -31,7 +32,8 @@
          :machine (:instance "host" :type "X86-64")
          :features (:swank)
          :modules ("SWANK-ARGLISTS" "SWANK-REPL" "SWANK-PRESENTATIONS")
-         :package (:name "(user)" :prompt "(user)")
+         :package (:name ,(environment-name-as-string ($current-environment))
+                   :prompt ,(environment-name-as-string ($current-environment)))
          :version "2.28"))
 
 (define-slime-handler (swank:swank-require packages)
@@ -49,11 +51,16 @@
   (swank:lookup-presented-object num))
 
 (define-slime-handler (swank-repl:create-repl . args)
-  (list "(user)" "(user)"))
+  (list (environment-name-as-string ($current-environment))
+        (environment-name-as-string ($current-environment))))
 
 (define-slime-handler (swank-repl:listener-eval form)
   (let* ((form (replace-readtime-lookup-presented-object-or-lose form))
-	 (results ($output-to-repl (lambda () (interactive-eval (cons 'begin (read-all (open-input-string form))))))))
+	 (results ($output-to-repl (lambda ()
+                                     (interactive-eval
+                                      (cons 'begin
+                                            (replace-lookup-presented-object-or-lose
+                                             (read-all (open-input-string form)))))))))
     (for-each (lambda (val)
                 (if (presentations?)
                     (present val ':repl-result)
@@ -87,7 +94,7 @@
     `(:compilation-result nil t 0.001 nil nil)))
 
 (define-slime-handler (swank:load-file filename)
-  (let ((results ($output-to-repl (lambda () (load filename (param:environment))))))
+  (let ((results ($output-to-repl (lambda () (load filename ($current-environment))))))
     'loaded))
 
 (define-slime-handler (swank:set-package name)
