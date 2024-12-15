@@ -136,7 +136,7 @@
   (hash-table-ref/default *handlers* name #f))
 
 (define (interactive-eval sexp)
-  (let-values ((vals (eval sexp (param:environment)))) ;; TODO environment
+  (let-values ((vals ($eval sexp (param:environment)))) ;; TODO environment
     vals))
 
 (define *presentations* (make-hash-table))

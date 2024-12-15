@@ -8,6 +8,8 @@
 (define ($scheme-name)
   "chibi-scheme")
 
+(define $eval eval)
+
 (define ($macroexpand-1 form)
   (macroexpand form))
 

@@ -2,6 +2,13 @@
 (define ($scheme-name)
   "guile")
 
+(define ($eval exp env)
+  ;; set an $eval-tag prompt to limit backtrace frames up to it.
+  (call-with-prompt '$eval-tag
+                    (lambda () (eval exp env))
+                    (lambda args #t) ; dummy handler
+                    ))
+
 (define ($macroexpand-1 form)
   (macroexpand form))
 
@@ -112,44 +119,31 @@
           (list mod)
           cs)))
 
-(define stack-offset 3)
-
-
 ;; we keep the frames returned by $condition-trace, so that frame-locals-and-catch-tags
 ;; can access the same frames with the same ordering
-(define stored-frames
-  #())
+(define *stored-frames* #())
 
 (define ($condition-trace condition)
   ;; we ignore condition for now, since I didn't find a way of getting
   ;; stack information out of it.
-  (let ((frames (let* ((tag %start-stack)
-                       (frames (narrow-stack->vector
-                                (make-stack #t)
-                                stack-offset
-                                tag
-                                0
-                                tag))
-                       (n-frames (vector-length frames)))
-                  (let loop ((i (- n-frames 1))
-                             (result #()))
-                    (if (< i 0)
-                        result
-                        (let ((fr (vector-ref frames i)))
-                          (if (frame-procedure-name fr)
-                              (loop (- i 1)
-                                    (vector-append (vector fr) result))
-                              (loop (- i 1) result))))))))
-    (set! stored-frames frames)
+  (let* ((stack (make-stack #t))
+         (frames (narrow-stack->vector
+                  stack
+                  ;; Jump over the first frames containing:
+                  ;;    make-stack, $condition-trace and invoke-sldb
+                  3
+                  ;; show up to prompt tag set by $eval
+                  '$eval-tag)))
+    (set! *stored-frames* frames)
     (vector->list
      (vector-map (lambda (fr)
-                   (format #f "~a" (frame-procedure-name fr)))
+                   (format #f "~a"
+                           (frame-call-representation fr)))
                  frames))))
 
 
 (define ($frame-locals-and-catch-tags nr)
-  (let* ((tag %start-stack)
-         (frames stored-frames)
+  (let* ((frames *stored-frames*)
          (bindings (frame-bindings (vector-ref frames nr)))
          (entries (map (lambda (i b)
                          `(:name ,(format #f "~a" (binding-name b))
@@ -159,14 +153,17 @@
                        bindings)))
     (list entries (list 'nil))))
 
-(define ($frame-var-value frame index)
-  #f)
+(define ($frame-var-value frame-index binding-index)
+  (let* ((fr (vector-ref *stored-frames* frame-index))
+         (bindings (frame-bindings fr)))
+    (binding-ref (list-ref bindings binding-index))))
 
 (define ($condition-msg condition)
   (apply format
          `(#f
            ,(exception-message condition)
-           ,@(exception-irritants condition))))
+           ,@(or (exception-irritants condition) ; may return #f
+                 '()))))
 
 (define ($condition-links condition)
   (vector->list
@@ -178,7 +175,7 @@
                              (col (source:column src)))
                          (list file #f line col))
                        #f)))
-               stored-frames)))
+               *stored-frames*)))
 
 (define ($handle-condition exception)
   (invoke-sldb exception))

@@ -1,5 +1,8 @@
 (define ($scheme-name)
   "chicken-scheme")
+
+(define $eval eval)
+
 (define ($macroexpand-1 form)
   (##sys#expand form))
 (define ($macroexpand-all form)

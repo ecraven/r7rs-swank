@@ -1,6 +1,8 @@
 (define ($scheme-name)
   "chez-scheme")
 
+(define $eval eval)
+
 (define ($macroexpand-1 form)
   (expand form))
 

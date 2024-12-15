@@ -1,5 +1,8 @@
 (define ($scheme-name)
   "cyclone-scheme")
+
+(define $eval eval)
+
 (define ($open-tcp-server/accept port-number handler)
   (let ((server (make-server-socket (number->string port-number))))
     (let ((socket (socket-accept server)))

@@ -1,5 +1,8 @@
 (define ($scheme-name)
   "kawa")
+
+(define $eval eval)
+
 ;; not sure how to express this require as an r7rs import :-/
 ;; (require 'syntax-utils)
 ;; (define ($macroexpand-1 form)

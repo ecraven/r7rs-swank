@@ -1,6 +1,8 @@
 (define ($scheme-name)
   "gerbil-scheme")
 
+(define $eval eval)
+
 (define (remove-underscores-and-trailing-numbers str)
   (define last (- (string-length str) 1))
   (cond ((char-numeric? (string-ref str last))
