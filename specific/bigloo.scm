@@ -55,7 +55,6 @@
 ;;;; end srfi-39
 (define ($scheme-name)
   "bigloo")
-(define $eval eval)
 (define-syntax case-lambda
   (syntax-rules ()
     ((case-lambda (params body0 body1 ...) ...)

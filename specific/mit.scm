@@ -500,7 +500,6 @@
 
 (define ($scheme-name)
   "mit-scheme")
-(define $eval eval)
 (define (fluid a)
   (a))
 

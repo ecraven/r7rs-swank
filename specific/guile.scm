@@ -2,13 +2,6 @@
 (define ($scheme-name)
   "guile")
 
-(define ($eval exp env)
-  ;; set an $eval-tag prompt to limit backtrace frames up to it.
-  (call-with-prompt '$eval-tag
-                    (lambda () (eval exp env))
-                    (lambda args #t) ; dummy handler
-                    ))
-
 (define ($macroexpand-1 form)
   (macroexpand form))
 
@@ -127,13 +120,16 @@
   ;; we ignore condition for now, since I didn't find a way of getting
   ;; stack information out of it.
   (let* ((stack (make-stack #t))
+         ;; Inspired by from guile/module/system/repl/error-handling.scm
+         ;; Fetch most recent start-stack tag.
+         (tag (and (pair? (fluid-ref %stacks))
+                   (cdr (fluid-ref %stacks))))
          (frames (narrow-stack->vector
                   stack
                   ;; Jump over the first frames containing:
                   ;;    make-stack, $condition-trace and invoke-sldb
                   3
-                  ;; show up to prompt tag set by $eval
-                  '$eval-tag)))
+                  tag)))
     (set! *stored-frames* frames)
     (vector->list
      (vector-map (lambda (fr)

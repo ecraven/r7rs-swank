@@ -1,8 +1,5 @@
 (define ($scheme-name)
   "larceny")
-
-(define $eval eval)
-
 (define ($all-package-names)
   '())
 

@@ -1,6 +1,5 @@
 (define ($scheme-name)
   "racket")
-(define $eval eval)
 (define ($macroexpand-1 form)
   (expand-once form))
 (define ($macroexpand-all form)
