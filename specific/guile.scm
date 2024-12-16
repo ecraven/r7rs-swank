@@ -28,24 +28,8 @@
   (let ((port (accept-new-client socket)))
     (handler port port)))
 
-(define fop flush-output-port)
-;;(define (flush-output-port . port) (fop (if (null? port) (current-output-port) (car port))))
-
-;;(define (read-bytevector count port) (get-bytevector-n port count))
-;; (define bvc! bytevector-copy!)
-;; (define (bytevector-copy! to to-index from)
-;;   (bvc! from 0 to to-index (bytevector-length from)))
-
-;;(define write-string display)
-
 (define ($all-package-names)
   (all-modules))
-
-;; (define (with-exception-handler handler thunk)
-;;   (catch #t
-;;          thunk
-;;          (lambda p
-;;            (handler p))))
 
 (define ($error-description error)
   (let ((o (open-output-string)))
