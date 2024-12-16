@@ -42,6 +42,8 @@ You'll also need https://github.com/ecraven/chez-scheme-libraries.
                                 :env "GAUCHE_KEYWORD_IS_SYMBOL=T")
                 slime-lisp-implementations))
 #+END_SRC
+
+*** Guile
 #+BEGIN_SRC elisp
     (defun guile-scheme-start-swank (file encoding)
       (format "%S\n\n" `(begin (import (guile-swank)) (start-swank ,file))))
