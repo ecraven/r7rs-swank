@@ -89,8 +89,7 @@
 (define ($completions prefix env-name)
   (let ((matches (filter (lambda (el) (string-prefix? prefix el))
                          (map symbol->string (environment-bindings (env-name->environment env-name))))))
-    (cons matches
-          (longest-common-prefix matches))))
+    matches))
 ;;;; taken from geiser
 (define (submodules mod)
   (hash-map->list (lambda (k v) v) (module-submodules mod)))

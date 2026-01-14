@@ -32,10 +32,12 @@
          :features (:swank)
          :modules ("SWANK-ARGLISTS" "SWANK-REPL" "SWANK-PRESENTATIONS")
          :package (:name "(user)" :prompt "(user)")
-         :version "2.28"))
+         ;; :version "2.28"
+         :version nil
+         ))
 
 (define-slime-handler (swank:swank-require packages)
-  '())
+  (map string-upcase (map symbol->string (cadr packages))))
 
 (define-slime-handler (swank:init-presentations)
   '())
@@ -68,9 +70,14 @@
   ($all-package-names))
 
 (define-slime-handler (swank:completions prefix env-name)
-  (let ((completions+prefix ($completions prefix (unquote-string env-name))))
-    (list (car completions+prefix)
-          (cdr completions+prefix))))
+  (let ((completions ($completions prefix (unquote-string env-name))))
+    ;; see swank.lisp, function symbol-classification-string
+    ;; "bfgctmspa"
+    ;; boundp fboundp generic-function class macro special-operator package accessor
+    (map (lambda (l) (if (list? l) l (list l "-f-------" l))) completions)
+    ;; (list (car completions+prefix)
+    ;;       (cdr completions+prefix))
+    ))
 
 (define-slime-handler (swank:simple-completions prefix env-name)
   ;; TODO: for now, just copy swank:completions

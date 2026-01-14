@@ -783,8 +783,7 @@
 
 (define ($completions prefix env-name)
   (let ((strings (all-completions prefix (pstring->env env-name))))
-    (cons (sort strings string<?)
-          (longest-common-prefix strings))))
+    (sort strings string<?)))
 
 (define (longest-common-prefix strings)
   (reduce (lambda (s1 s2)

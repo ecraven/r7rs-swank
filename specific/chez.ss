@@ -235,18 +235,25 @@
               (loop (+ i 1))
               (- i 1))))))
 
-(define (longest-common-prefix strings)
-  (if (null? strings)
-      '()
-      (fold-left (lambda (s1 s2) (substring s2 0 (string-match-forward s1 s2))) (car strings) (cdr strings))))
-
 (define ($completions prefix env-name)
   (let ((matches (sort string-ci<?
                        (filter (lambda (el)
                                  (string-prefix? prefix el))
                                (map write-to-string (environment-symbols (pstring->environment env-name))))))) ;;  (interaction-environment)
-    (cons matches
-          (longest-common-prefix matches))))
+    (map (lambda (m)
+           (let ((is-syntax (cons 1 2))
+                 (other-error (cons 2 3)))
+             (let ((v (guard (condition (else (if (string=? (string-append "Exception: invalid syntax " m "\n") ($condition-msg condition)) is-syntax other-error)))
+                        (eval (string->symbol m) (param:environment)))))
+               (list m
+                     (cond ((eq? v is-syntax)
+                            "----ms--")
+                           ((procedure? v)
+                            "-f------")
+                           (else
+                            "b-------"))
+                     m))))
+         matches)))
 
 (define (list-index predicate list)
   (let loop ((i 0)
@@ -908,7 +915,6 @@
     "")
   (define-built-in-doc dynamic-wind '(dynamic-wind before thunk after)
     "")
-  
 
   (define-built-in-doc foreign-alloc '(foreign-alloc n)
     "Allocate N bytes.")

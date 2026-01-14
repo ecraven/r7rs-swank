@@ -69,7 +69,7 @@
   '())
 
 (define ($completions prefix env-name)
-  (cons '() prefix))
+  '())
 
 (define ($condition-location condition)
   #f)

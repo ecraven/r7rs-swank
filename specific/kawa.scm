@@ -57,11 +57,6 @@
               (loop (+ i 1))
               (- i 1))))))
 
-(define (longest-common-prefix strings)
-  (if (null? strings)
-      ""
-      (fold (lambda (s1 s2) (substring s2 0 (string-match-forward s1 s2))) (car strings) (cdr strings))))
-
 (define (env-name->environment env-name)
   (cond ((string=? env-name "(user)")
          (interaction-environment))
@@ -97,8 +92,7 @@
                           (map symbol->string (environment-bindings (env-name->environment env-name)))))
          (java-matches (find-java-matches prefix env-name))
          (all (append matches java-matches)))
-    (cons all
-          (longest-common-prefix all))))
+    all))
 
 (define ($function-parameters-and-documentation name)
   (cons #f #f))

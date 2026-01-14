@@ -118,8 +118,7 @@
 (define ($completions prefix env-name)
   (let ((matches (filter (lambda (el) (string-prefix? prefix el))
                          (map symbol->string (environment-bindings env-name)))))
-    (cons matches
-          (longest-common-prefix matches))))
+    matches))
 
 (define ($condition-trace condition)
   '())

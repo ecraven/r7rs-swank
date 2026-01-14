@@ -89,10 +89,6 @@
           (if (string=? (substring a 0 i) (substring b 0 i))
               (loop (+ i 1))
               (- i 1))))))
-(define (longest-common-prefix strings)
-  (if (null? strings)
-      ""
-      (fold (lambda (s1 s2) (substring s2 0 (string-match-forward s1 s2))) (car strings) (cdr strings))))
 (define ($completions prefix env-name)
   (let ((result '()))
     (define (search m)
@@ -105,9 +101,7 @@
                 (module-imports mod))
       (for-each search
                 (module-precedence-list mod))
-      
-      (cons result
-            (longest-common-prefix result)))))
+      result)))
 
 (define-record-type <istate>
   (make-istate object parts actions next previous content)

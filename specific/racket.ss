@@ -55,15 +55,10 @@
           (if (string=? (substring a 0 i) (substring b 0 i))
               (loop (+ i 1))
               (- i 1))))))
-(define (longest-common-prefix strings)
-  (if (null? strings)
-      ""
-      (fold (lambda (s1 s2) (substring s2 0 (string-match-forward s1 s2))) (mcar strings) (mlist->list (mcdr strings)))))
 (define ($completions prefix env-name)
   (let ((matches (list->mlist (filter (lambda (el) (string-prefix? prefix el))
                                       (mlist->list (map symbol->string (list->mlist (environment-bindings (env-name->environment env-name)))))))))
-    (cons (mlist->list matches)
-          (longest-common-prefix matches))))
+    (mlist->list matches)))
 
 (define ($function-parameters-and-documentation name)
   (cons #f #f))

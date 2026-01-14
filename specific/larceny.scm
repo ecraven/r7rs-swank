@@ -43,8 +43,7 @@
         (apply values x)))))
 
 (define ($completions prefix env-name)
-  (cons '()
-        prefix))
+  '())
 
 (define ($function-parameters-and-documentation name)
   (cons #f #f))

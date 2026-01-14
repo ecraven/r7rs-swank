@@ -7,7 +7,7 @@
           swank-register-image-converter
           inspect-in-emacs
           swank-present
-          tracing
+          tracing %pre-tracing-value
           trace-let trace-let* trace-letrec trace-letrec* trace-define)
   (import (socket net)
           (srfi :69)

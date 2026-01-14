@@ -60,22 +60,7 @@
      (if (not env)
 	 res
 	 (lp (env-parent env) (append (env-exports env) res))))))
-(define (longest-common-prefix strings)
 
-  (cond ((null? strings)
-	 "")
-	((= (length strings) 1)
-	 (car strings))
-	(else
-	 (let ((max-length (apply min (map string-length strings))))
-	   (let loop ((i 1))
-	     (if (all-string=? (map (lambda (el)
-				      (substring el 0 i))
-				    strings))
-		 (if (= i max-length)
-		     (substring (car strings) 0 i)
-		     (loop (+ i 1)))
-		 (substring (car strings) 0 (- i 1))))))))
 (define *active-package-name* '(user))
 (define (all-string=? lst)
   (let loop ((first (car lst))
@@ -105,8 +90,7 @@
 							       (string-prefix? prefix (symbol->string el)))
 							     bindings))
 				 string<?)))
-	  (cons completions
-		(longest-common-prefix completions)))))))
+	  completions)))))
 
 (define ($function-parameters-and-documentation name)
   (cons #f #f))
